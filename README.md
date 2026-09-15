@@ -7,9 +7,23 @@ An original creature-collecting MMORPG: capture wild creatures, raise and evolve
 - **Main story**: [`docs/STORY.md`](docs/STORY.md)
 - **Act 1 full questline**: [`docs/QUESTLINE_ACT1.md`](docs/QUESTLINE_ACT1.md)
 - **Tech plan**: [`docs/TECHNICAL_PLAN.md`](docs/TECHNICAL_PLAN.md)
-- **Engine**: Unity, built on the open-source [OpenMMORPG](https://github.com/open-mmorpg/OpenMMORPG) framework (MIT-licensed)
+- **Stack**: Node.js + TypeScript — Express/Prisma/Postgres backend API, Colyseus realtime game server. No Unity (see tech plan §1 for why). Client not yet started.
 - **Team size**: 3–10 people
-- **Status**: Pre-production — design phase
+- **Status**: Backend + realtime server working (auth, characters, species, live multiplayer position sync — see tech plan §2). Client and gameplay systems beyond movement not yet built.
+
+## Running it locally
+
+```
+npm install                        # from repo root — npm workspaces
+cd backend && cp .env.example .env # configure DATABASE_URL / JWT_SECRET
+npx prisma migrate dev
+npx prisma db seed
+cd ..
+npm run dev:backend                # terminal 1
+JWT_SECRET=<same as backend .env> npm run dev:realtime   # terminal 2
+```
+
+Requires a locally running Postgres and (for future Redis-backed features) Redis. See `backend/README.md` and `realtime/README.md` for details.
 
 ## Legal note
 

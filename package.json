@@ -1,0 +1,14 @@
+{
+  "name": "creature-mmo",
+  "private": true,
+  "workspaces": [
+    "shared",
+    "backend",
+    "realtime"
+  ],
+  "scripts": {
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:realtime": "npm run dev --workspace=realtime",
+    "build": "npm run build --workspace=shared && npm run build --workspace=backend && npm run build --workspace=realtime"
+  }
+}

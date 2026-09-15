@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ElementType {
+  FLAME
+  TIDE
+  VERDANT
+  STONE
+  GALE
+  VOLT
+  SHADE
+  RADIANT
+}
+
+model Account {
+  id           String      @id @default(uuid())
+  email        String      @unique
+  passwordHash String
+  createdAt    DateTime    @default(now())
+  characters   Character[]
+}
+
+model Character {
+  id         String            @id @default(uuid())
+  account    Account           @relation(fields: [accountId], references: [id])
+  accountId  String
+  name       String
+  level      Int               @default(1)
+  createdAt  DateTime          @default(now())
+  creatures  CreatureInstance[]
+
+  @@unique([accountId, name])
+}
+
+// A species/evolution-line definition (design content, not player data).
+// Matches docs/GAME_DESIGN.md §4 and art/creatures/species/*.md.
+model Species {
+  id            String      @id @default(uuid())
+  key           String      @unique // e.g. "duskwyrm"
+  name          String
+  type          ElementType
+  tier          Int         // 1, 2, or 3
+  baseHp        Int
+  baseAttack    Int
+  baseDefense   Int
+  baseSpeed     Int
+  baseFocus     Int
+  evolvesFrom   Species?    @relation("EvolutionLine", fields: [evolvesFromId], references: [id])
+  evolvesFromId String?
+  evolvesInto   Species[]   @relation("EvolutionLine")
+  instances     CreatureInstance[]
+}
+
+// A specific creature (Emergent) owned by a character.
+model CreatureInstance {
+  id          String    @id @default(uuid())
+  character   Character @relation(fields: [characterId], references: [id])
+  characterId String
+  species     Species   @relation(fields: [speciesId], references: [id])
+  speciesId   String
+  nickname    String?
+  level       Int       @default(1)
+  bondMeter   Int       @default(0)
+  currentHp   Int
+  createdAt   DateTime  @default(now())
+}
