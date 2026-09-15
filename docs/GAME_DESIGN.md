@@ -15,10 +15,14 @@ This is an **original IP**. No character designs, creature names, lore, or code 
 
 ## 3. World & setting
 
-- **Setting**: a fractured world of floating regions ("Shards") connected by portals, each Shard themed around an element/biome (forest, volcanic, tundra, ruins, etc.) and home to creatures aligned with that element.
-- **Hub city**: a central social space (bank, marketplace/auction house, guild hall, evolution altar, portal terminal).
+Full background/story bible: [`docs/WORLD_LORE.md`](WORLD_LORE.md). Summary:
+
+- **Setting**: a parallel data-dimension called **the Continuum**, fractured into regions called **Shards**, connected by portals. Each Shard congealed around a "flavor" of data (records, creative streams, comms, waste heat, etc.), giving it a distinct biome/element (forest, volcanic, tundra, ruins, etc.) and native creature population — in-fiction, creatures are called **Emergents**; players are **Anchors**.
+- **Hub city**: **Origin**, the one Shard Anchors built themselves — bank, marketplace/auction house, guild hall, the **Resequencing Spire** (evolution altar), portal terminal.
 - **Zones**: each Shard has open-world PvE areas (wild creature spawns, gathering nodes, mini-bosses) and one or more instanced dungeons.
-- **World bosses**: scheduled, server-wide spawns requiring multiple players/parties to defeat, dropping rare evolution catalysts.
+- **World bosses**: scheduled, server-wide **Null Surge** spawns requiring multiple players/parties to defeat, dropping rare evolution catalysts. "The Null" is the setting's antagonist force — corrupted/unstable data-lifeforms — and the source of PvE hostiles generally.
+
+UI/gameplay copy can use plain terms (creature, evolve, zone) where clarity matters more than flavor; the lore terms above are for quest text, NPC dialogue, and narrative moments.
 
 ## 4. Creature system
 
