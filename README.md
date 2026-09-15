@@ -3,6 +3,8 @@
 An original creature-collecting MMORPG: capture wild creatures, raise and evolve them, build a team, and battle other players — built entirely with original IP (no Digimon/Pokémon assets, names, or code).
 
 - **Design doc**: [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md)
+- **World lore**: [`docs/WORLD_LORE.md`](docs/WORLD_LORE.md)
+- **Main story**: [`docs/STORY.md`](docs/STORY.md)
 - **Tech plan**: [`docs/TECHNICAL_PLAN.md`](docs/TECHNICAL_PLAN.md)
 - **Engine**: Unity, built on the open-source [OpenMMORPG](https://github.com/open-mmorpg/OpenMMORPG) framework (MIT-licensed)
 - **Team size**: 3–10 people
