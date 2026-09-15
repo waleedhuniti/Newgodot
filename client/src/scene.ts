@@ -1,14 +1,15 @@
 import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
-// Placeholder world: a flat ground plane stands in for a real map model,
-// and colored cone markers stand in for wild creature spawns until real
-// monster models are wired in. Swapping either for real assets later
-// only touches this file.
-const MONSTER_SPAWN_POINTS = [
-  new THREE.Vector3(6, 0, 4),
-  new THREE.Vector3(-8, 0, 6),
-  new THREE.Vector3(3, 0, -10),
-  new THREE.Vector3(-5, 0, -6),
+// Placeholder world: a flat ground plane stands in for a real map model.
+// Monster models are real (Quaternius Animated Monster Pack, CC0 — see
+// art/creatures/quaternius-animated-monster-pack/), placed at fixed spawn
+// points until a real wild-spawn system exists.
+const MONSTER_SPAWNS: { model: string; idleClip: string; position: THREE.Vector3 }[] = [
+  { model: "/models/Dragon.glb", idleClip: "Dragon_Flying", position: new THREE.Vector3(6, 0, 4) },
+  { model: "/models/Bat.glb", idleClip: "Bat_Flying", position: new THREE.Vector3(-8, 0, 6) },
+  { model: "/models/Skeleton.glb", idleClip: "Skeleton_Idle", position: new THREE.Vector3(3, 0, -10) },
+  { model: "/models/Slime.glb", idleClip: "Slime_Idle", position: new THREE.Vector3(-5, 0, -6) },
 ];
 
 export class GameWorld {
@@ -18,6 +19,9 @@ export class GameWorld {
 
   private playerMeshes = new Map<string, THREE.Mesh>();
   private localSessionId: string | null = null;
+  private mixers: THREE.AnimationMixer[] = [];
+  private clock = new THREE.Clock();
+  private loader = new GLTFLoader();
 
   constructor(canvas: HTMLCanvasElement) {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
@@ -57,12 +61,25 @@ export class GameWorld {
   }
 
   private setupMonsterMarkers() {
-    const geo = new THREE.ConeGeometry(0.6, 1.4, 6);
-    const mat = new THREE.MeshStandardMaterial({ color: 0x9b2c2c });
-    for (const pos of MONSTER_SPAWN_POINTS) {
-      const marker = new THREE.Mesh(geo, mat);
-      marker.position.copy(pos).setY(0.7);
-      this.scene.add(marker);
+    for (const spawn of MONSTER_SPAWNS) {
+      this.loader.load(
+        spawn.model,
+        (gltf) => {
+          const model = gltf.scene;
+          model.position.copy(spawn.position);
+          this.scene.add(model);
+
+          if (gltf.animations.length > 0) {
+            const mixer = new THREE.AnimationMixer(model);
+            const clip =
+              gltf.animations.find((c) => c.name.endsWith(spawn.idleClip)) ?? gltf.animations[0];
+            mixer.clipAction(clip).play();
+            this.mixers.push(mixer);
+          }
+        },
+        undefined,
+        (err) => console.error(`failed to load ${spawn.model}`, err)
+      );
     }
   }
 
@@ -103,6 +120,8 @@ export class GameWorld {
   }
 
   render() {
+    const dt = this.clock.getDelta();
+    for (const mixer of this.mixers) mixer.update(dt);
     this.renderer.render(this.scene, this.camera);
   }
 }

@@ -12,9 +12,11 @@ Controls: WASD (or arrow keys) to move.
 
 ## Current state
 
-- Ground plane and red cone markers are **placeholders** standing in for a real map and monster models (`src/scene.ts` — `setupGround()` / `setupMonsterMarkers()`). Swapping in real assets only touches this file.
+- Ground plane is still a **placeholder** flat grid standing in for a real map (`src/scene.ts` — `setupGround()`). Swapping in a real map model only touches this function.
+- Monster spawns are **real models** now: Bat, Skeleton, Dragon, and Slime from Quaternius's CC0 "Animated Monster Pack" (`art/creatures/quaternius-animated-monster-pack/`), converted to glTF and loaded via `GLTFLoader` in `setupMonsterMarkers()`, each playing its idle/flying animation clip through `THREE.AnimationMixer`. Static placement for now — no wild-spawn logic or capture interaction yet.
 - Movement and multiplayer position sync are real and working — verified with a headless-browser test (two simultaneous sessions, each seeing the other move live).
 - No capture/combat/UI beyond the login form and a minimal HUD yet — see `docs/TECHNICAL_PLAN.md` §6 for what's next.
+- Model files live in `public/models/*.glb` (Vite serves `public/` at the site root, hence `/models/Dragon.glb` paths in `scene.ts`). Re-run the Blender conversion (see `art/creatures/quaternius-animated-monster-pack/ATTRIBUTION.md`) if the source FBX ever changes.
 
 ## Structure
 
