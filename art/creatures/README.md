@@ -1,8 +1,12 @@
-# Creatures — placeholder art sources
+# Creatures — art sources
+
+## Sourced and in-repo already
+
+- **Duskwyrm** (`sources/oscar-creativo-dragon/`) — "Dragon Character 3d" by Oscar Creativo, CC-BY licensed (confirmed with the author), pre-rigged. See `species/duskwyrm.md` for how it maps to the game's creature system, and that folder's `ATTRIBUTION.md` for the required credit text.
+
+## Still to download (placeholder packs)
 
 I can't download these directly (this session's network policy blocks general asset sites). Please download the zips below and extract them into this folder, each in its own subfolder as named. Then let me know and I'll wire them into the Unity project and map species to the evolution lines in `docs/GAME_DESIGN.md`.
-
-## To download
 
 1. **Quaternius — Ultimate Monsters Pack** → extract into `art/creatures/quaternius-ultimate-monsters/`
    - https://quaternius.com/packs/animatedmonster.html (or the Sketchfab/poly.pizza mirror)
