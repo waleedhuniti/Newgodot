@@ -7,9 +7,9 @@ An original creature-collecting MMORPG: capture wild creatures, raise and evolve
 - **Main story**: [`docs/STORY.md`](docs/STORY.md)
 - **Act 1 full questline**: [`docs/QUESTLINE_ACT1.md`](docs/QUESTLINE_ACT1.md)
 - **Tech plan**: [`docs/TECHNICAL_PLAN.md`](docs/TECHNICAL_PLAN.md)
-- **Stack**: Node.js + TypeScript — Express/Prisma/Postgres backend API, Colyseus realtime game server. No Unity (see tech plan §1 for why). Client not yet started.
+- **Stack**: Node.js + TypeScript — Express/Prisma/Postgres backend API, Colyseus realtime game server, Three.js + Vite web client. No Unity (see tech plan §1 for why).
 - **Team size**: 3–10 people
-- **Status**: Backend + realtime server working (auth, characters, species, live multiplayer position sync — see tech plan §2). Client and gameplay systems beyond movement not yet built.
+- **Status**: Playable end-to-end with placeholder art — login, character creation with a starter creature, and live multiplayer movement all verified working in a real browser (see tech plan §2). No real map/monster models, capture mechanic, or combat yet.
 
 ## Running it locally
 
@@ -21,9 +21,10 @@ npx prisma db seed
 cd ..
 npm run dev:backend                # terminal 1
 JWT_SECRET=<same as backend .env> npm run dev:realtime   # terminal 2
+npm run dev:client                 # terminal 3, then open the printed localhost URL
 ```
 
-Requires a locally running Postgres and (for future Redis-backed features) Redis. See `backend/README.md` and `realtime/README.md` for details.
+Requires a locally running Postgres and (for future Redis-backed features) Redis. See `backend/README.md`, `realtime/README.md`, and `client/README.md` for details.
 
 ## Legal note
 

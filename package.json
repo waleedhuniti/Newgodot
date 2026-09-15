@@ -4,11 +4,13 @@
   "workspaces": [
     "shared",
     "backend",
-    "realtime"
+    "realtime",
+    "client"
   ],
   "scripts": {
     "dev:backend": "npm run dev --workspace=backend",
     "dev:realtime": "npm run dev --workspace=realtime",
-    "build": "npm run build --workspace=shared && npm run build --workspace=backend && npm run build --workspace=realtime"
+    "dev:client": "npm run dev --workspace=client",
+    "build": "npm run build --workspace=shared && npm run build --workspace=backend && npm run build --workspace=realtime && npm run build --workspace=client"
   }
 }
