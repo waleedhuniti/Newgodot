@@ -5,6 +5,7 @@ An original creature-collecting MMORPG: capture wild creatures, raise and evolve
 - **Design doc**: [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md)
 - **World lore**: [`docs/WORLD_LORE.md`](docs/WORLD_LORE.md)
 - **Main story**: [`docs/STORY.md`](docs/STORY.md)
+- **Act 1 full questline**: [`docs/QUESTLINE_ACT1.md`](docs/QUESTLINE_ACT1.md)
 - **Tech plan**: [`docs/TECHNICAL_PLAN.md`](docs/TECHNICAL_PLAN.md)
 - **Engine**: Unity, built on the open-source [OpenMMORPG](https://github.com/open-mmorpg/OpenMMORPG) framework (MIT-licensed)
 - **Team size**: 3–10 people
