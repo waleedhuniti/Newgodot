@@ -8,154 +8,130 @@
 
 config_version=4
 
-_global_script_classes=[
-{
+_global_script_classes=[ {
 "base": "Inventory",
 "class": "CurrencyInventory",
 "language": "GDScript",
 "path": "res://addons/wyvernbox/inventories/currency_inventory.gd"
-},
-{
+}, {
 "base": "Resource",
 "class": "EquipBonus",
 "language": "GDScript",
 "path": "res://addons/wyvernbox/equip_bonus.gd"
-},
-{
+}, {
 "base": "ItemStackView",
 "class": "GrabbedItemStackView",
 "language": "GDScript",
 "path": "res://addons/wyvernbox/view_extra/grabbed_item_stack.gd"
-},
-{
+}, {
 "base": "Inventory",
 "class": "GridInventory",
 "language": "GDScript",
 "path": "res://addons/wyvernbox/inventories/grid_inventory.gd"
-},
-{
+}, {
 "base": "Node",
 "class": "GroundItemManager",
 "language": "GDScript",
 "path": "res://addons/wyvernbox/ground/ground_items_manager.gd"
-},
-{
+}, {
 "base": "Area2D",
 "class": "GroundItemStackView2D",
 "language": "GDScript",
 "path": "res://addons/wyvernbox/ground/ground_item_stack_view_2d.gd"
-},
-{
+}, {
 "base": "CollisionObject",
 "class": "GroundItemStackView3D",
 "language": "GDScript",
 "path": "res://addons/wyvernbox/ground/ground_item_stack_view_3d.gd"
-},
-{
+}, {
 "base": "Resource",
 "class": "Inventory",
 "language": "GDScript",
 "path": "res://addons/wyvernbox/inventories/inventory.gd"
-},
-{
+}, {
 "base": "Container",
 "class": "InventoryTooltip",
 "language": "GDScript",
 "path": "res://addons/wyvernbox/view_extra/tooltip.gd"
-},
-{
+}, {
 "base": "Reference",
 "class": "InventoryTooltipProperty",
 "language": "GDScript",
 "path": "res://addons/wyvernbox/view_extra/tooltip_property.gd"
-},
-{
+}, {
 "base": "Node",
 "class": "InventoryVendor",
 "language": "GDScript",
 "path": "res://addons/wyvernbox/crafting/vendor.gd"
-},
-{
+}, {
 "base": "Control",
 "class": "InventoryView",
 "language": "GDScript",
 "path": "res://addons/wyvernbox/inventory_view.gd"
-},
-{
+}, {
 "base": "Resource",
 "class": "ItemConversion",
 "language": "GDScript",
 "path": "res://addons/wyvernbox/crafting/item_conversion.gd"
-},
-{
+}, {
 "base": "Resource",
 "class": "ItemGenerator",
 "language": "GDScript",
 "path": "res://addons/wyvernbox/crafting/item_generator.gd"
-},
-{
+}, {
 "base": "ItemGenerator",
 "class": "ItemGeneratorEquipmentBonus",
 "language": "GDScript",
 "path": "res://addons/wyvernbox/extension/item_generator_equipment_bonus.gd"
-},
-{
+}, {
 "base": "Resource",
 "class": "ItemInstantiator",
 "language": "GDScript",
 "path": "res://addons/wyvernbox/item_instantiator.gd"
-},
-{
+}, {
 "base": "Resource",
 "class": "ItemPattern",
 "language": "GDScript",
 "path": "res://addons/wyvernbox/crafting/item_pattern.gd"
-},
-{
+}, {
 "base": "ItemPattern",
 "class": "ItemPatternEquipStat",
 "language": "GDScript",
 "path": "res://addons/wyvernbox/extension/item_pattern_equip_stat.gd"
-},
-{
+}, {
 "base": "ItemPattern",
 "class": "ItemPatternHighlightStack",
 "language": "GDScript",
 "path": "res://addons/wyvernbox/extension/item_pattern_highlight_stack.gd"
-},
-{
+}, {
 "base": "ItemPattern",
 "class": "ItemPatternName",
 "language": "GDScript",
 "path": "res://addons/wyvernbox/extension/item_pattern_name.gd"
-},
-{
+}, {
 "base": "Reference",
 "class": "ItemStack",
 "language": "GDScript",
 "path": "res://addons/wyvernbox/item_stack.gd"
-},
-{
+}, {
 "base": "Control",
 "class": "ItemStackView",
 "language": "GDScript",
 "path": "res://addons/wyvernbox/view_extra/item_stack_view.gd"
-},
-{
+}, {
 "base": "Resource",
 "class": "ItemType",
 "language": "GDScript",
 "path": "res://addons/wyvernbox/item_type.gd"
-},
-{
+}, {
 "base": "Inventory",
 "class": "RestrictedInventory",
 "language": "GDScript",
 "path": "res://addons/wyvernbox/inventories/restricted_inventory.gd"
-}
-]
+} ]
 _global_script_class_icons={
 "CurrencyInventory": "res://addons/wyvernbox/icons/currency_inventory.png",
+"EquipBonus": "",
 "GrabbedItemStackView": "res://addons/wyvernbox/icons/grabbed_item_stack.png",
 "GridInventory": "res://addons/wyvernbox/icons/grid_inventory.png",
 "GroundItemManager": "res://addons/wyvernbox/icons/ground_item_manager.png",
@@ -163,12 +139,18 @@ _global_script_class_icons={
 "GroundItemStackView3D": "res://addons/wyvernbox/icons/item_stack_view_3d.png",
 "Inventory": "res://addons/wyvernbox/icons/inventory.png",
 "InventoryTooltip": "res://addons/wyvernbox/icons/tooltip.png",
+"InventoryTooltipProperty": "",
 "InventoryVendor": "res://addons/wyvernbox/icons/vendor.png",
 "InventoryView": "res://addons/wyvernbox/icons/inventory_view.png",
 "ItemConversion": "res://addons/wyvernbox/icons/item_conversion.png",
 "ItemGenerator": "res://addons/wyvernbox/icons/item_generator.png",
+"ItemGeneratorEquipmentBonus": "",
 "ItemInstantiator": "res://addons/wyvernbox/icons/item_instantiator.png",
 "ItemPattern": "res://addons/wyvernbox/icons/item_pattern.png",
+"ItemPatternEquipStat": "",
+"ItemPatternHighlightStack": "",
+"ItemPatternName": "",
+"ItemStack": "",
 "ItemStackView": "res://addons/wyvernbox/icons/grabbed_item_stack.png",
 "ItemType": "res://addons/wyvernbox/icons/item_type.png",
 "RestrictedInventory": "res://addons/wyvernbox/icons/restricted_inventory.png"

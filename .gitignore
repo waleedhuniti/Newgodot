@@ -5,8 +5,10 @@
 *.import
 *.material
 export.cfg
-export_presets.cfg
 *.translation
+
+# Scratch export output (test builds) - the real hosted build lives in docs/
+build/
 
 # API keys and secrets
 .env

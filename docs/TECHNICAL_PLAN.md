@@ -18,8 +18,11 @@ current scope.
   in this sandbox — Godot 4's official downloads are blocked by this sandbox's
   network policy, so 3.5 is what's actually available here).
 - **Language**: GDScript.
-- **Project root**: repo root (`project.godot` there). `docs/` and `art/` are
-  untouched by the engine; `scenes/` and `scripts/` hold the game itself.
+- **Project root**: repo root (`project.godot` there). `art/` is untouched by
+  the engine; `scenes/` and `scripts/` hold the game itself. `docs/` holds
+  design/technical docs *and* the hosted HTML5 build (see §6) side by side -
+  GitHub Pages only supports repo-root or `/docs` as a source, so the build
+  output lives there rather than disturbing existing doc links.
 - **Rendering**: GLES3.
 
 ## 2. Why Godot 3.5 and not 4
@@ -73,12 +76,12 @@ to happen again when assets are added/changed; the resulting `.import/` cache
   Mouse-look camera (captured by default, Esc toggles), WASD relative to camera
   yaw, Shift to run, Space to jump, gravity, and animation state driven by a
   `KayKit` character's baked-in `AnimationPlayer` (`Idle_Rig`/`Walking_A_Rig`/
-  `Running_A_Rig` - `Skeleton_Warrior.glb` is a placeholder player model, see §6).
+  `Running_A_Rig` - `Skeleton_Warrior.glb` is a placeholder player model, see §7).
 - Environment: `assets/environments/dungeon_01/dungeon_01.glb`, the same
   KayKit-built dungeon hall from the t5c era (copied over, not rebuilt - see
   `art/environments/shards/dungeon_01/build.py` if it needs regenerating).
   Collision is currently a single flat `StaticBody`/`BoxShape` floor sized to
-  match the hall, not real per-wall collision (see §6).
+  match the hall, not real per-wall collision (see §7).
 - `scripts/AnimatedCharacter.gd` — shared `KinematicBody` base for
   Player/Enemy: finds the `AnimationPlayer` buried inside a KayKit model,
   `play_anim()` (no-ops if already playing unless forced), `health`/
@@ -164,7 +167,64 @@ third-party API/service needs a live check before depending on it, and that
 this sandbox unless it's small enough to fetch file-by-file via raw content
 URLs.
 
-## 6. Known gaps / next steps
+## 6. Hosting: HTML5 export via GitHub Pages
+
+Contrary to §5 - `godotengine.org`/`tuxfamily.org` (Godot's own download/docs
+domains) are blocked, but **`github.com`'s release-asset CDN is not** - so
+Godot 3.5.2's official export templates (a GitHub release asset on
+`godotengine/godot`) download fine even though the same file from Godot's own
+site wouldn't. This is what makes exporting - and therefore hosting - possible
+at all from this sandbox. Worth re-testing if a future session needs something
+else assumed blocked; not every "official Godot" URL behaves the same.
+
+- **Export templates**: `godot3`'s apt package ships the editor, not export
+  templates - those install separately to
+  `~/.local/share/godot/templates/3.5.2.stable/`, unzipped from
+  `Godot_v3.5.2-stable_export_templates.tpz` off GitHub releases.
+- **`export_presets.cfg`** (committed, not gitignored - it's needed to
+  reproduce the build): one HTML5 preset, `variant/thread_support=false`.
+  Threaded WASM needs `Cross-Origin-Opener-Policy`/`Cross-Origin-Embedder-Policy`
+  response headers that GitHub Pages doesn't set, so non-threaded is the only
+  variant that actually runs there.
+- **Texture size problem and fix**: a first export attempt produced a 389MB
+  `.pck` - almost entirely `dungeon_01.glb`'s 60 extracted materials, each
+  embedding an *uncompressed* 1024x1024 RGBA texture (~4MB apiece, ~250MB
+  total). Godot 3.x's glTF scene importer has no compression option for
+  textures extracted this way (unlike standalone texture files, which the
+  "VRAM Texture Compression" export option does cover) - so `export_filter`
+  exclusions alone couldn't fix this without losing the dungeon's materials
+  entirely (tried first; confirmed via a headless-Chromium screenshot that it
+  renders geometry correctly but flat white, no textures - see below).
+  Fixed with `tools/optimize_dungeon_textures.gd`, a one-time post-import
+  script that downscales each material's texture to 256x256 (plenty for this
+  stylized low-poly pack) via `Image.resize()` + `ResourceSaver.save()`,
+  cutting that folder from ~250MB to ~17MB. Also excluded unused fbx/obj
+  source variants and sample folders never referenced by any scene
+  (`art/creatures/kaykit-skeletons/Characters/fbx/`, `.../Samples/`,
+  `.../Assets/`, the dungeon pack's `fbx/`/`obj/` folders, unused creature
+  source/animation packs) via `export_filter`'s `exclude_filter`. Final
+  build: ~59MB `.pck` + ~14MB `.wasm` + a few small files, comfortably under
+  GitHub's 100MB-per-file hard limit.
+- **Verifying a web export headlessly**: a screenshot inside the Godot editor
+  proves the *native* build renders; it says nothing about the *HTML5* build,
+  which runs a completely different code path (Emscripten/WebAssembly, WebGL
+  instead of GLES3 directly). Verified instead with Chromium (pre-installed,
+  `/opt/pw-browsers/chromium`) via Playwright, loading the build off a plain
+  `python3 -m http.server` and screenshotting after a load delay - this is
+  what actually caught the missing-textures problem above, and confirmed the
+  fix.
+- **Rebuilding after a fresh import**: `.material` files are gitignored
+  import-cache output (regenerated from `dungeon_01.glb`, not source content),
+  so a fresh clone's re-import produces full-size ones again. Run
+  `godot3 --path . -s tools/optimize_dungeon_textures.gd` after importing and
+  before exporting, or the web build balloons back to ~95MB+.
+- **Rebuilding the site**: after changing the game,
+  `godot3 --path . --export "HTML5" build/web/index.html` (into the gitignored
+  `build/` scratch dir), verify it, then copy `build/web/*` into `docs/` and
+  commit. GitHub Pages serves whatever's on `docs/` on this branch directly -
+  no build step runs on GitHub's side.
+
+## 7. Known gaps / next steps
 
 1. **Placeholder player model**: using `Skeleton_Warrior.glb` (from
    `art/creatures/kaykit-skeletons/`, meant for enemies) as a stand-in player
