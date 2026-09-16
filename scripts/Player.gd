@@ -1,4 +1,4 @@
-extends KinematicBody
+extends "res://scripts/AnimatedCharacter.gd"
 
 export var walk_speed = 3.5
 export var run_speed = 7.0
@@ -7,31 +7,30 @@ export var jump_speed = 7.0
 export var rotation_speed = 12.0
 export var mouse_sensitivity = 0.0035
 
+export var attack_range = 2.2
+export var attack_damage = 6.0
+export var attack_cooldown = 1.2
+export var skill_range = 2.6
+export var skill_damage = 14.0
+export var skill_cooldown = 4.0
+
 var velocity = Vector3.ZERO
 var camera_pivot_yaw = 0.0
 var camera_pivot_pitch = -0.35
 
 onready var camera_pivot = $CameraPivot
 onready var camera = $CameraPivot/Camera
-onready var model = $Model
-onready var anim_player = _find_animation_player(model)
 
-var current_anim = ""
+var target = null
+var _attack_timer = 0.0
+var _skill_timer = 0.0
+var _busy_until = 0.0
 
 func _ready():
+	max_health = 100.0
+	health = max_health
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
-	_play_anim("Idle")
-
-func _find_animation_player(node):
-	if node == null:
-		return null
-	if node is AnimationPlayer:
-		return node
-	for child in node.get_children():
-		var found = _find_animation_player(child)
-		if found:
-			return found
-	return null
+	play_anim("Idle")
 
 func _unhandled_input(event):
 	if event is InputEventMouseMotion and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
@@ -39,12 +38,55 @@ func _unhandled_input(event):
 		camera_pivot_pitch = clamp(camera_pivot_pitch - event.relative.y * mouse_sensitivity, -1.2, 0.3)
 	if event is InputEventKey and event.pressed and event.scancode == KEY_ESCAPE:
 		var mode = Input.get_mouse_mode()
-		if mode == Input.MOUSE_MODE_CAPTURED:
-			Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
-		else:
-			Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE if mode == Input.MOUSE_MODE_CAPTURED else Input.MOUSE_MODE_CAPTURED)
+	if event is InputEventMouseButton and event.pressed and event.button_index == BUTTON_LEFT:
+		_try_select_target()
+	if event is InputEventKey and event.pressed and event.scancode == KEY_1:
+		_try_use_skill()
+
+func _try_select_target():
+	var from = camera.project_ray_origin(get_viewport().get_mouse_position())
+	var to = from + camera.project_ray_normal(get_viewport().get_mouse_position()) * 100
+	var space_state = get_world().direct_space_state
+	var result = space_state.intersect_ray(from, to, [self])
+	if result and result.collider and result.collider.is_in_group("enemies"):
+		target = result.collider
+
+func _clear_dead_target():
+	if target != null and (not is_instance_valid(target) or target.is_dead):
+		target = null
+
+func _try_use_skill():
+	if is_dead or target == null or target.is_dead:
+		return
+	if _skill_timer > 0.0 or _time_now() < _busy_until:
+		return
+	var dist = global_transform.origin.distance_to(target.global_transform.origin)
+	if dist > skill_range:
+		return
+	_face_target()
+	play_anim("2H_Melee_Attack_Spin", true)
+	_busy_until = _time_now() + 0.6
+	_skill_timer = skill_cooldown
+	target.take_damage(skill_damage)
+
+func _time_now():
+	return OS.get_ticks_msec() / 1000.0
+
+func _face_target():
+	if target == null:
+		return
+	var to_target = target.global_transform.origin - global_transform.origin
+	if to_target.length() > 0.01:
+		model.rotation.y = atan2(to_target.x, to_target.z)
 
 func _physics_process(delta):
+	_clear_dead_target()
+	if _attack_timer > 0.0:
+		_attack_timer -= delta
+	if _skill_timer > 0.0:
+		_skill_timer -= delta
+
 	camera_pivot.rotation.y = camera_pivot_yaw
 	camera_pivot.rotation.x = camera_pivot_pitch
 
@@ -79,16 +121,28 @@ func _physics_process(delta):
 
 	velocity = move_and_slide(velocity, Vector3.UP)
 
-	if moving:
+	var busy = _time_now() < _busy_until
+	if is_dead:
+		pass
+	elif busy:
+		pass
+	elif moving:
 		var target_angle = atan2(move_dir.x, move_dir.z)
 		model.rotation.y = lerp_angle(model.rotation.y, target_angle, rotation_speed * delta)
-		_play_anim("Running_A" if speed == run_speed else "Walking_A")
+		play_anim("Running_A" if speed == run_speed else "Walking_A")
+	elif target != null and not target.is_dead:
+		var dist = global_transform.origin.distance_to(target.global_transform.origin)
+		if dist <= attack_range and _attack_timer <= 0.0:
+			_face_target()
+			play_anim("1H_Melee_Attack_Slice_Horizontal", true)
+			_busy_until = _time_now() + 0.5
+			_attack_timer = attack_cooldown
+			target.take_damage(attack_damage)
+		else:
+			play_anim("Idle")
 	else:
-		_play_anim("Idle")
+		play_anim("Idle")
 
-func _play_anim(anim_name):
-	if anim_player == null or current_anim == anim_name:
-		return
-	if anim_player.has_animation(anim_name):
-		anim_player.play(anim_name)
-		current_anim = anim_name
+func die():
+	.die()
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)

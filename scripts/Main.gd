@@ -9,9 +9,13 @@ extends Spatial
 # confusing to debug).
 # --debug-cam switches to the top-down DebugCamera instead of the player's own
 # camera, useful for checking a whole scene layout at once.
+# --test-combat auto-targets the nearest enemy for the player (skipping the
+# mouse click) and logs health every 30 frames, since a single screenshot
+# can't show a fight playing out over time.
 var _screenshot_path = ""
 var _screenshot_frame = 20
 var _frame = 0
+var _test_combat = false
 
 func _ready():
 	for arg in OS.get_cmdline_args():
@@ -19,8 +23,27 @@ func _ready():
 			_screenshot_path = arg.substr(len("--screenshot="))
 		elif arg.begins_with("--frames="):
 			_screenshot_frame = int(arg.substr(len("--frames=")))
+	_test_combat = "--test-combat" in OS.get_cmdline_args()
 	if _screenshot_path != "" and "--debug-cam" in OS.get_cmdline_args():
 		$DebugCamera.current = true
+	if _test_combat:
+		call_deferred("_setup_test_combat")
+
+func _setup_test_combat():
+	var player = get_node_or_null("Player")
+	var enemies = get_tree().get_nodes_in_group("enemies")
+	if player and enemies.size() > 0:
+		player.target = enemies[0]
+		print("TEST-COMBAT: player targeting ", enemies[0].name)
+
+func _log_combat_status():
+	var player = get_node_or_null("Player")
+	var enemies = get_tree().get_nodes_in_group("enemies")
+	var player_hp = player.health if player else -1
+	var enemy_status = []
+	for e in enemies:
+		enemy_status.append("%s hp=%s dead=%s" % [e.name, e.health, e.is_dead])
+	print("TEST-COMBAT frame=%d player_hp=%s enemies=%s" % [_frame, player_hp, enemy_status])
 
 func _debug_dump():
 	var player = get_node_or_null("Player")
@@ -30,9 +53,15 @@ func _debug_dump():
 		print("DEBUG anim_player: ", player.anim_player, " animations: ", (player.anim_player.get_animation_list() if player.anim_player else []))
 
 func _process(_delta):
+	if _test_combat:
+		_frame += 1
+		if _frame % 30 == 0:
+			_log_combat_status()
+
 	if _screenshot_path == "":
 		return
-	_frame += 1
+	if not _test_combat:
+		_frame += 1
 	if _frame == _screenshot_frame:
 		if "--verbose" in OS.get_cmdline_args():
 			_debug_dump()

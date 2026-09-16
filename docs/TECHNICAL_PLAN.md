@@ -79,10 +79,29 @@ to happen again when assets are added/changed; the resulting `.import/` cache
   `art/environments/shards/dungeon_01/build.py` if it needs regenerating).
   Collision is currently a single flat `StaticBody`/`BoxShape` floor sized to
   match the hall, not real per-wall collision (see §6).
+- `scripts/AnimatedCharacter.gd` — shared `KinematicBody` base for
+  Player/Enemy: finds the `AnimationPlayer` buried inside a KayKit model,
+  `play_anim()` (no-ops if already playing unless forced), `health`/
+  `max_health`/`is_dead`, `take_damage()`/`die()` with `died`/`health_changed`
+  signals.
+- Combat: click an enemy to target it (raycast, checks `is_in_group("enemies")`),
+  auto-attack in range on a cooldown, skill on key `1` (shorter range, more
+  damage, longer cooldown). Both use the KayKit model's own attack animations.
+- `scenes/Enemy.tscn` / `scripts/Enemy.gd` — a simple melee mob
+  (`Skeleton_Minion.glb`): idle until the player enters aggro range, walks
+  into attack range, then attacks on cooldown; despawns a few seconds after
+  death. One instance placed in `Main.tscn` near the player's spawn point.
+- Headless combat verification: `scripts/Main.gd` supports `--test-combat`
+  (auto-targets the nearest enemy for the player instead of requiring a mouse
+  click, and logs both sides' HP every 30 frames), since a single screenshot
+  can't show a fight resolving over time. Combined with `--screenshot`, this
+  caught a real bug: `signal health_changed(current, max)` failed to parse
+  because `max` is a reserved GDScript built-in, not a valid signal parameter
+  name (fixed by renaming to `max_hp`).
 
-Not yet built: combat, enemies, inventory, quests - everything beyond "walk
-around a 3D space" is new work, same as it would be starting from nothing,
-except now on an engine that isn't fighting us.
+Not yet built: inventory, quests, creature-taming - everything beyond
+character movement and basic melee combat is new work, same as it would be
+starting from nothing, except now on an engine that isn't fighting us.
 
 ## 5. Hosting / network constraints in this sandbox
 
@@ -111,5 +130,10 @@ URLs.
    hand-authored collision shapes per piece, or Godot's mesh-to-trimesh-collision
    import option (needs the editor's per-file import settings, not something
    hand-authored `.tscn` text easily expresses).
-3. **No combat/enemies/inventory/quests yet** - see §4.
-4. **No multiplayer** - out of scope for now (§1).
+3. **No inventory/quests/creature-taming yet** - combat and a first enemy are
+   done (§4), but nothing past that.
+4. **Only one enemy type, no loot**: `Skeleton_Minion` is the only mob so far
+   and defeating it drops nothing yet - inventory work (next up) will add
+   pickups using the coin/key models already in the KayKit dungeon pack
+   (`art/environments/kaykit-dungeon-remastered/Assets/fbx/`).
+5. **No multiplayer** - out of scope for now (§1).
