@@ -1,6 +1,28 @@
 import { QuestObjective } from "../../shared/types";
 
 let QuestsDB = {
+    // Tutorial quest - MQ04/MQ05 in docs/QUESTLINE_ACT1.md ("Earning Trust" / "The Bond").
+    // Talk to the wild Wyrmling once to approach it, talk again to complete the bond.
+    // TODO: this stands in for the real capture mechanic (docs/GAME_DESIGN.md §4.2) until
+    // that's built - completing it should eventually add the creature to the player's
+    // roster instead of just granting XP.
+    MQ_FIRST_CONTACT: {
+        key: "MQ_FIRST_CONTACT",
+        title: "The Bond",
+        description:
+            "A small creature watches you from a few steps away, curious but wary. It doesn't feel dangerous - just uncertain, the way you probably look to it too. Approach slowly.",
+        objective: "@NpcName seems to be waiting to see what you'll do.",
+        type: QuestObjective.TALK_TO,
+        location: "arrival_clearing",
+        spawn_key: "arrival_wyrmling",
+        quantity: 1,
+        isRepeatable: false,
+        rewards: {
+            experience: 200,
+            gold: 0,
+            items: [],
+        },
+    },
     LH_DANGEROUS_ERRANDS_01: {
         key: "LH_DANGEROUS_ERRANDS_01", // unique id
         title: "Dangerous Errands",

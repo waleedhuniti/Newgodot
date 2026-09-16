@@ -134,13 +134,16 @@ export class GameScene {
         }
 
         // load navmesh
-        this._navMesh = await this.loadNavMesh(location.key);
+        // .mesh, not .key - see the loadLevel() call below for why.
+        this._navMesh = await this.loadNavMesh(location.mesh);
         this._navMeshDebug = createConvexRegionHelper(this._navMesh, this._scene); // function to show the navmesh as a mesh in-game
         this._navMeshDebug.isVisible = false;
 
         // initialize assets controller & load level
+        // uses .mesh, not .key: locations that reuse an existing map mesh
+        // (docs/TECHNICAL_PLAN.md §4) reuse its environment .glb too.
         this._game.initializeAssetController(this._shadow);
-        await this._game._assetsCtrl.loadLevel(location.key);
+        await this._game._assetsCtrl.loadLevel(location.mesh);
         this._game.engine.displayLoadingUI();
 
         // preload any skeletons and animation

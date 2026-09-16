@@ -12,6 +12,62 @@ const DEFAULT_LOOT = [
 ];
 
 let LocationsDB = {
+    // Tutorial zone - "Arrival" in docs/STORY.md §1 / MQ01-03 in docs/QUESTLINE_ACT1.md.
+    // Reuses the training_ground mesh as placeholder geometry (no custom map built yet -
+    // see docs/TECHNICAL_PLAN.md §4.4) and rat_01 as a placeholder for the Wyrmling
+    // species (art/creatures/species/duskwyrm.md's Tier 1 form isn't sourced yet either).
+    arrival_clearing: {
+        title: "Arrival Clearing",
+        key: "arrival_clearing",
+        mesh: "training_ground",
+        sun: true,
+        sunIntensity: 1,
+        fog: false,
+        spawnPoint: {
+            x: 0,
+            y: 0,
+            z: 0,
+            rot: -180,
+        },
+        waterPlane: false,
+        skyColor: [0, 0, 0, 1],
+        music: "MUSIC_01",
+        dynamic: {
+            interactive: [],
+            spawns: [
+                {
+                    key: "arrival_wyrmling",
+                    type: "static",
+                    behaviour: "idle",
+                    aggressive: false,
+                    canAttack: false,
+                    points: [new Vector3(6, 0, -8)],
+                    rotation: 2.4,
+                    amount: 1,
+                    // Placeholder race - "rat_01" is referenced by other locations'
+                    // spawns but was never actually added to RacesDB (missing .vat
+                    // data crashes VatController on load - a pre-existing gap, not
+                    // introduced here). skeleton_01 is a complete, proven-working
+                    // entry; swap for a real Wyrmling model per art/creatures/species/.
+                    race: "skeleton_01",
+                    material: 0,
+                    name: "Wyrmling",
+                    baseHealth: 9999,
+                    interactable: {
+                        title: "Approach",
+                        data: [
+                            {
+                                type: "text",
+                                text: "A small creature watches you from a few steps away, curious but wary. It doesn't feel dangerous - just uncertain, the way you probably look to it too.",
+                                quests: [{ key: "MQ_FIRST_CONTACT" }],
+                                isEndOfDialog: true,
+                            },
+                        ],
+                    },
+                },
+            ],
+        },
+    },
     lh_town: {
         title: "Lighthaven",
         key: "lh_town",

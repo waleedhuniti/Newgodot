@@ -154,13 +154,14 @@ class Database {
                 20,
                 20,
                 20,
-                //"training_ground",
-                "lh_town",
+                // New characters start in the tutorial zone (docs/QUESTLINE_ACT1.md MQ01-05),
+                // not the main hub - they arrive at Origin later via the questline.
+                "arrival_clearing",
 
-                6.18,
+                2,
                 0.1,
-                -11.21,
-                1.72,
+                -2,
+                2.0,
 
                 1,
                 0,

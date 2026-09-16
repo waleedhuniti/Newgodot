@@ -102,7 +102,7 @@ export type Quest = {
     descriptionReward: string;
     descriptionCompleted: string;
     objective: string;
-    type: QuestObjective.KILL_AMOUNT;
+    type: QuestObjective;
     location: string;
     spawn_key: string;
     quantity: number;

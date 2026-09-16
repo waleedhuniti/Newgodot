@@ -1,3 +1,24 @@
+// This trimmed bundle referenced Logger.error()/warn() in a few rarely-hit
+// error paths (NavMeshLoader, Polygon) but never defined it - a latent
+// ReferenceError crash waiting for the right (or wrong) input. Mirrors the
+// same class from yuka-full.js.
+class Logger {
+    static setLevel(level) {
+        currentLevel = level;
+    }
+    static log(...args) {
+        if (currentLevel <= Logger.LEVEL.LOG) console.log(...args);
+    }
+    static warn(...args) {
+        if (currentLevel <= Logger.LEVEL.WARN) console.warn(...args);
+    }
+    static error(...args) {
+        if (currentLevel <= Logger.LEVEL.ERROR) console.error(...args);
+    }
+}
+Logger.LEVEL = Object.freeze({ LOG: 0, WARN: 1, ERROR: 2, SILENT: 3 });
+let currentLevel = Logger.LEVEL.WARN;
+
 const BINARY_EXTENSION_HEADER_MAGIC = "glTF";
 const BINARY_EXTENSION_HEADER_LENGTH = 12;
 const BINARY_EXTENSION_CHUNK_TYPES = { JSON: 0x4e4f534a, BIN: 0x004e4942 };

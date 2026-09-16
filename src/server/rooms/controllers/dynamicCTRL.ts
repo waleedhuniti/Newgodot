@@ -75,6 +75,11 @@ export class dynamicCTRL {
             if (quest.type === QuestObjective.KILL_AMOUNT && pQuest.qty >= quest.quantity && pQuest.status === 0) {
                 return true;
             }
+            // TALK_TO: mirrors the client check in QuestDialog.ts - talking to the quest
+            // giver again after accepting completes it (no separate target to visit).
+            if (quest.type === QuestObjective.TALK_TO && pQuest.status === 0) {
+                return true;
+            }
         }
         return false;
     }

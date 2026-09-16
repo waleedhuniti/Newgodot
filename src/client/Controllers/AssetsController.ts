@@ -130,7 +130,10 @@ export class AssetsController {
 
     public async loadNavMesh() {
         this.showLoadingMessage("navmesh: loading");
-        let navmesh = await loadNavMeshFromString(this._auth.currentLocation.key);
+        // Use .mesh, not .key: the navmesh belongs to the visual map mesh, so
+        // locations that reuse an existing mesh (see docs/TECHNICAL_PLAN.md §4)
+        // reuse its navmesh too instead of needing a duplicate file per location.
+        let navmesh = await loadNavMeshFromString(this._auth.currentLocation.mesh);
         this.showLoadingMessage("navmesh: loaded");
         return navmesh;
     }

@@ -351,6 +351,11 @@ export class QuestDialog {
             if (this.currentQuest.type === QuestObjective.KILL_AMOUNT && this.playerQuest.qty >= this.currentQuest.quantity && this.playerQuest.status === 0) {
                 return true;
             }
+            // TALK_TO: talking to the quest giver again (after accepting) completes it -
+            // e.g. approach once to accept, approach again to confirm/complete.
+            if (this.currentQuest.type === QuestObjective.TALK_TO && this.playerQuest.status === 0) {
+                return true;
+            }
         }
         return false;
     }

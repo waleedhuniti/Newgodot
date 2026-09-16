@@ -8,6 +8,7 @@ import { Auth } from "./commands";
 import { PlayerSchema } from "./schema";
 import { Database } from "../Database";
 import { Config } from "../../shared/Config";
+import { LocationsDB } from "../data/LocationsDB";
 
 export class GameRoom extends Room<GameRoomState> {
     public maxClients = 64;
@@ -29,10 +30,13 @@ export class GameRoom extends Room<GameRoomState> {
 
         this.config = new Config();
 
-        // initialize navmesh
-        const navMesh = await loadNavMeshFromFile(options.location);
+        // initialize navmesh - use the location's .mesh, not its .key: locations
+        // that reuse an existing map mesh (docs/TECHNICAL_PLAN.md §4) reuse its
+        // navmesh too instead of needing a duplicate file per location.
+        const navMeshFile = LocationsDB[options.location]?.mesh ?? options.location;
+        const navMesh = await loadNavMeshFromFile(navMeshFile);
         this.navMesh = navMesh;
-        Logger.info("[gameroom][onCreate] navmesh " + options.location + " initialized.");
+        Logger.info("[gameroom][onCreate] navmesh " + navMeshFile + " initialized.");
 
         // Set initial state
         this.setState(new GameRoomState(this, this.navMesh, options));

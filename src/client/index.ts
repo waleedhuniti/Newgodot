@@ -77,9 +77,11 @@ class App {
         this.game = new GameController(this);
         await this.game.initializeGameData();
 
-        // set default scene
-        let defaultScene = isLocal() ? State.GAME : State.LOGIN;
-        this.game.setScene(defaultScene);
+        // Always start at login now that we're building/testing the real
+        // login -> character selection -> create character -> tutorial flow
+        // (this used to skip straight to State.GAME when running locally,
+        // which is convenient for combat/movement dev but hid this whole flow).
+        this.game.setScene(State.LOGIN);
 
         // main render loop & state machine
         await this._render();
