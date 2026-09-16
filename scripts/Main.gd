@@ -12,10 +12,15 @@ extends Spatial
 # --test-combat auto-targets the nearest enemy for the player (skipping the
 # mouse click) and logs health every 30 frames, since a single screenshot
 # can't show a fight playing out over time.
+# --test-pickup teleports the player onto each standalone pickup in turn
+# (skipping walking there) and logs inventory contents after each, since
+# pickup is a physics overlap that a screenshot alone can't confirm worked.
 var _screenshot_path = ""
 var _screenshot_frame = 20
 var _frame = 0
 var _test_combat = false
+var _test_pickup = false
+var _pickup_queue = []
 
 func _ready():
 	for arg in OS.get_cmdline_args():
@@ -24,10 +29,13 @@ func _ready():
 		elif arg.begins_with("--frames="):
 			_screenshot_frame = int(arg.substr(len("--frames=")))
 	_test_combat = "--test-combat" in OS.get_cmdline_args()
+	_test_pickup = "--test-pickup" in OS.get_cmdline_args()
 	if _screenshot_path != "" and "--debug-cam" in OS.get_cmdline_args():
 		$DebugCamera.current = true
 	if _test_combat:
 		call_deferred("_setup_test_combat")
+	if _test_pickup:
+		call_deferred("_setup_test_pickup")
 
 func _setup_test_combat():
 	var player = get_node_or_null("Player")
@@ -36,6 +44,9 @@ func _setup_test_combat():
 		player.target = enemies[0]
 		print("TEST-COMBAT: player targeting ", enemies[0].name)
 
+func _setup_test_pickup():
+	_pickup_queue = get_tree().get_nodes_in_group("pickups").duplicate()
+
 func _log_combat_status():
 	var player = get_node_or_null("Player")
 	var enemies = get_tree().get_nodes_in_group("enemies")
@@ -43,7 +54,20 @@ func _log_combat_status():
 	var enemy_status = []
 	for e in enemies:
 		enemy_status.append("%s hp=%s dead=%s" % [e.name, e.health, e.is_dead])
-	print("TEST-COMBAT frame=%d player_hp=%s enemies=%s" % [_frame, player_hp, enemy_status])
+	var pickups = get_tree().get_nodes_in_group("pickups").size()
+	print("TEST-COMBAT frame=%d player_hp=%s enemies=%s pickups_in_world=%d" % [_frame, player_hp, enemy_status, pickups])
+
+func _run_test_pickup_step():
+	var player = get_node_or_null("Player")
+	if player == null:
+		return
+	if _pickup_queue.size() > 0:
+		var next = _pickup_queue.pop_front()
+		if is_instance_valid(next):
+			player.transform.origin = next.global_transform.origin
+			print("TEST-PICKUP: moved player to ", next.name)
+	else:
+		print("TEST-PICKUP: final inventory = ", player.inventory)
 
 func _debug_dump():
 	var player = get_node_or_null("Player")
@@ -57,10 +81,14 @@ func _process(_delta):
 		_frame += 1
 		if _frame % 30 == 0:
 			_log_combat_status()
+	elif _test_pickup:
+		_frame += 1
+		if _frame % 15 == 0:
+			_run_test_pickup_step()
 
 	if _screenshot_path == "":
 		return
-	if not _test_combat:
+	if not _test_combat and not _test_pickup:
 		_frame += 1
 	if _frame == _screenshot_frame:
 		if "--verbose" in OS.get_cmdline_args():

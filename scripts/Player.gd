@@ -26,11 +26,18 @@ var _attack_timer = 0.0
 var _skill_timer = 0.0
 var _busy_until = 0.0
 
+var inventory = {}
+signal inventory_changed(inventory)
+
 func _ready():
 	max_health = 100.0
 	health = max_health
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	play_anim("Idle")
+
+func add_item(item_id, item_amount = 1):
+	inventory[item_id] = inventory.get(item_id, 0) + item_amount
+	emit_signal("inventory_changed", inventory)
 
 func _unhandled_input(event):
 	if event is InputEventMouseMotion and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:

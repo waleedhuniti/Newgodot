@@ -80,9 +80,15 @@ func _physics_process(delta):
 
 	velocity = move_and_slide(velocity, Vector3.UP)
 
+export var loot_scene = preload("res://scenes/CoinPickup.tscn")
+
 func die():
 	.die()
 	set_collision_layer(0)
 	set_collision_mask(0)
+	if loot_scene:
+		var loot = loot_scene.instance()
+		loot.transform.origin = global_transform.origin
+		get_parent().add_child(loot)
 	var timer = get_tree().create_timer(despawn_delay)
 	timer.connect("timeout", self, "queue_free")

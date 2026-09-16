@@ -98,10 +98,27 @@ to happen again when assets are added/changed; the resulting `.import/` cache
   caught a real bug: `signal health_changed(current, max)` failed to parse
   because `max` is a reserved GDScript built-in, not a valid signal parameter
   name (fixed by renaming to `max_hp`).
+- `scripts/Pickup.gd` — a spinning `Area` that grants an item to whatever
+  enters it (checks `has_method("add_item")`) and frees itself.
+  `scenes/CoinPickup.tscn`/`scenes/KeyPickup.tscn` wrap it with the KayKit
+  dungeon pack's `coin.gltf.glb`/`key.gltf.glb` models. `Player.gd` tracks
+  `inventory` (a `{item_id: count}` dictionary) via `add_item()` and an
+  `inventory_changed` signal.
+- `scenes/HUD.tscn`/`scripts/HUD.gd` — a `CanvasLayer` label reading the
+  player's inventory off that signal, showing coin/key counts.
+- Loot: `Enemy.gd`'s `die()` spawns a `CoinPickup` at its death position
+  (`loot_scene`, currently always a coin - no drop table yet).
+- Headless pickup verification: `--test-pickup` teleports the player onto
+  each standalone pickup in turn (skipping the walk there) and logs
+  inventory after each; confirmed both the coin and key pickups grant the
+  right item and despawn. `--test-combat`'s per-30-frame log now also
+  counts pickups in the world, confirming the enemy's coin drop appears
+  exactly when it dies.
 
-Not yet built: inventory, quests, creature-taming - everything beyond
-character movement and basic melee combat is new work, same as it would be
-starting from nothing, except now on an engine that isn't fighting us.
+Not yet built: quests, creature-taming, a real drop table - everything
+beyond character movement, basic melee combat, and simple item pickup is
+new work, same as it would be starting from nothing, except now on an
+engine that isn't fighting us.
 
 ## 5. Hosting / network constraints in this sandbox
 
@@ -130,10 +147,10 @@ URLs.
    hand-authored collision shapes per piece, or Godot's mesh-to-trimesh-collision
    import option (needs the editor's per-file import settings, not something
    hand-authored `.tscn` text easily expresses).
-3. **No inventory/quests/creature-taming yet** - combat and a first enemy are
-   done (§4), but nothing past that.
-4. **Only one enemy type, no loot**: `Skeleton_Minion` is the only mob so far
-   and defeating it drops nothing yet - inventory work (next up) will add
-   pickups using the coin/key models already in the KayKit dungeon pack
-   (`art/environments/kaykit-dungeon-remastered/Assets/fbx/`).
-5. **No multiplayer** - out of scope for now (§1).
+3. **No quests/creature-taming yet** - combat, a first enemy, and basic item
+   pickup are done (§4), but nothing past that.
+4. **Inventory has no UI beyond a HUD counter**: no inventory screen, no
+   item use/equip, no distinct item types beyond coin/key - just counts.
+5. **Only one enemy type, one drop**: `Skeleton_Minion` is the only mob and
+   it always drops exactly one coin - no drop table/chance/variety yet.
+6. **No multiplayer** - out of scope for now (§1).
