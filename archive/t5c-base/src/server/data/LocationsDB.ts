@@ -1,0 +1,722 @@
+import { PlayerSlots, Speed } from "../../shared/types";
+import { Vector3 } from "../../shared/Libs/yuka-min";
+import { LootTableEntry } from "../../shared/Class/LootTable";
+
+const DEFAULT_LOOT = [
+    LootTableEntry("sword_01", 10, 1, 1, 1, 1),
+    LootTableEntry("potion_small_blue", 40, 1, 1, 1, 1),
+    LootTableEntry("potion_small_red", 25, 1, 1, 1, 1),
+    LootTableEntry("shield_01", 5, 1, 1, 1, 1),
+    LootTableEntry("armor_01", 5, 1, 1, 1, 1),
+    LootTableEntry("amulet_01", 1, 1, 1, 1, 1),
+];
+
+let LocationsDB = {
+    // Tutorial zone - "Arrival" in docs/STORY.md §1 / MQ01-03 in docs/QUESTLINE_ACT1.md.
+    // Reuses the training_ground mesh as placeholder geometry (no custom map built yet -
+    // see docs/TECHNICAL_PLAN.md §4.4) and rat_01 as a placeholder for the Wyrmling
+    // species (art/creatures/species/duskwyrm.md's Tier 1 form isn't sourced yet either).
+    arrival_clearing: {
+        title: "Arrival Clearing",
+        key: "arrival_clearing",
+        mesh: "training_ground",
+        sun: true,
+        sunIntensity: 1,
+        fog: false,
+        spawnPoint: {
+            x: 0,
+            y: 0,
+            z: 0,
+            rot: -180,
+        },
+        waterPlane: false,
+        skyColor: [0, 0, 0, 1],
+        music: "MUSIC_01",
+        dynamic: {
+            interactive: [
+                // "Portal to Origin unlocked" reward from MQ06 - gated on that quest's
+                // completion via requires_quest_completed (see dynamicCTRL.ts update()).
+                {
+                    type: "zone_change",
+                    from: new Vector3(-6, 0, -12),
+                    to_map: "lh_town",
+                    to_vector: new Vector3(13, 0, -25.7),
+                    requires_quest_completed: "MQ06_VOICE_FROM_ORIGIN",
+                },
+                {
+                    // down into the Act 1 dungeon (MQ13+ in docs/QUESTLINE_ACT1.md) - always
+                    // open for now, not yet gated behind Rho's quest chain. Entered from here
+                    // rather than Origin: Origin's stock navmesh around the landing spot is a
+                    // small, oddly-bounded pocket (see TECHNICAL_PLAN.md §3) that repeatedly
+                    // refused to path anywhere beyond a couple of units in testing, whereas
+                    // this zone's navmesh is large and already well-proven (Wyrmling/Dessa
+                    // signal are both reachable well beyond this range).
+                    type: "zone_change",
+                    from: new Vector3(8, 0.1, 2),
+                    to_map: "lh_dungeon_01",
+                    to_vector: new Vector3(3, 0, -2),
+                },
+            ],
+            spawns: [
+                {
+                    key: "arrival_wyrmling",
+                    type: "static",
+                    behaviour: "idle",
+                    aggressive: false,
+                    canAttack: false,
+                    points: [new Vector3(6, 0, -8)],
+                    rotation: 2.4,
+                    amount: 1,
+                    // Placeholder race - "rat_01" is referenced by other locations'
+                    // spawns but was never actually added to RacesDB (missing .vat
+                    // data crashes VatController on load - a pre-existing gap, not
+                    // introduced here). skeleton_01 is a complete, proven-working
+                    // entry; swap for a real Wyrmling model per art/creatures/species/.
+                    race: "skeleton_01",
+                    material: 0,
+                    name: "Wyrmling",
+                    baseHealth: 9999,
+                    interactable: {
+                        title: "Approach",
+                        data: [
+                            {
+                                type: "text",
+                                text: "A small creature watches you from a few steps away, curious but wary. It doesn't feel dangerous - just uncertain, the way you probably look to it too.",
+                                quests: [{ key: "MQ_FIRST_CONTACT" }],
+                                isEndOfDialog: true,
+                            },
+                        ],
+                    },
+                },
+                // MQ06 in docs/QUESTLINE_ACT1.md ("A Voice From Elsewhere") - a "signal
+                // projection" of Dessa Vail, not physically present yet. Reuses the
+                // sorceress's mystic-blue material/head as a stand-in for a translucent
+                // projection look (no shader for that has been built - see TECHNICAL_PLAN.md).
+                {
+                    key: "arrival_dessa_signal",
+                    type: "static",
+                    behaviour: "idle",
+                    aggressive: false,
+                    canAttack: false,
+                    points: [new Vector3(-6, 0, -6)],
+                    rotation: 1.2,
+                    amount: 1,
+                    race: "humanoid",
+                    material: 7,
+                    head: "Head_Mage",
+                    name: "Dessa Vail (Signal)",
+                    baseHealth: 9999,
+                    interactable: {
+                        title: "Listen",
+                        data: [
+                            {
+                                type: "text",
+                                text: "You felt the pull, and you didn't run from it - that already puts you ahead of most people who ever will. I'm Dessa Vail. I coordinate things from Origin. You'll have questions. Come find me, and I'll do my best.",
+                                quests: [{ key: "MQ06_VOICE_FROM_ORIGIN" }],
+                                isEndOfDialog: true,
+                            },
+                        ],
+                    },
+                },
+            ],
+        },
+    },
+    lh_town: {
+        // Renamed in-fiction to "Origin" - the Anchor hub in docs/WORLD_LORE.md / Chapter 3
+        // of docs/QUESTLINE_ACT1.md. Kept the internal key "lh_town" (save/quest-location
+        // compatibility with content already wired to it) rather than duplicating the map.
+        title: "Origin",
+        key: "lh_town",
+        mesh: "lh_town",
+        sun: true,
+        sunIntensity: 0.6,
+        spawnPoint: {
+            x: 0,
+            y: 0,
+            z: 0,
+            rot: -180,
+        },
+        waterPlane: true,
+        skyColor: [0, 0, 0, 1],
+        fog: true,
+        music: "MUSIC_01",
+        dynamic: {
+            interactive: [
+                {
+                    type: "zone_change",
+                    from: new Vector3(13.82, 0.1, -33.46),
+                    to_map: "training_ground",
+                    to_vector: new Vector3(0, 0, 0),
+                },
+                {
+                    // to secret spot
+                    type: "teleport",
+                    from: new Vector3(-18.5, 0, -36.92),
+                    to_vector: new Vector3(-8, 0, -52),
+                },
+                {
+                    // back to lh_town
+                    type: "teleport",
+                    from: new Vector3(-8.4, 0, -49.08),
+                    to_vector: new Vector3(-22, 0, -37.8),
+                },
+                {
+                    // back to arrival_clearing (the way in is arrival_clearing's gated
+                    // portal above - this is just the return trip, always open)
+                    type: "zone_change",
+                    from: new Vector3(13, 0.1, -20),
+                    to_map: "arrival_clearing",
+                    to_vector: new Vector3(-6, 0, -4),
+                },
+            ],
+            spawns: [
+                ///////////////////////
+                ///////// NPC /////////
+
+                // DESSA VAIL - Origin's coordinator, giver of MQ07 (docs/QUESTLINE_ACT1.md
+                // Chapter 3). Placed right where the arrival_clearing portal drops the player.
+                {
+                    key: "origin_dessa",
+                    type: "static",
+                    behaviour: "idle",
+                    aggressive: false,
+                    canAttack: false,
+                    points: [new Vector3(13, 0.1, -22)],
+                    rotation: 3.14,
+                    amount: 1,
+                    race: "humanoid",
+                    material: 7,
+                    head: "Head_Mage",
+                    name: "Dessa Vail",
+                    interactable: {
+                        title: "Talk",
+                        data: [
+                            {
+                                type: "text",
+                                text: "This is Origin. Built by Anchors, for Anchors - the one place in the Continuum that didn't happen to us, we made it happen. Bank's there if you want somewhere safer than your pockets. Market's there. And that spire - that's where your partner will Ascend, when it's ready. Not yet, though.",
+                                quests: [{ key: "MQ07_WELCOME_TO_ORIGIN" }],
+                                isEndOfDialog: true,
+                            },
+                        ],
+                    },
+                },
+
+                // BLACKSMITH
+                {
+                    key: "lh_town_blacksmith",
+                    type: "static",
+                    behaviour: "idle",
+                    aggressive: false,
+                    canAttack: false,
+                    points: [new Vector3(31.22, 0.06, -24.19)],
+                    rotation: 2.75,
+                    amount: 1,
+                    race: "humanoid",
+                    material: 3,
+                    head: "Head_Barbarian",
+                    name: "Blacksmith Garin",
+                    equipment: [
+                        {
+                            key: "armor_02",
+                            slot: PlayerSlots.CHEST,
+                        },
+                        {
+                            key: "shield_01",
+                            slot: PlayerSlots.OFF_HAND,
+                        },
+                        {
+                            key: "sword_01",
+                            slot: PlayerSlots.WEAPON,
+                        },
+                    ],
+                    interactable: {
+                        title: "Talk",
+                        data: [
+                            {
+                                type: "text",
+                                text: "Greetings, adventurer! Looking for a new weapon or some sturdy armor? I've got the finest in Eldoria.",
+                                vendor: {
+                                    items: [
+                                        { key: "shield_01" }, //
+                                        { key: "sword_01" },
+                                        { key: "amulet_01" },
+                                        { key: "helm_01" },
+                                        { key: "armor_01" },
+                                        { key: "armor_02" },
+                                    ],
+                                },
+                                isEndOfDialog: true,
+                            },
+                        ],
+                    },
+                },
+
+                // MERCHANT
+                {
+                    key: "lh_town_merchant",
+                    type: "static",
+                    behaviour: "idle",
+                    aggressive: false,
+                    canAttack: false,
+                    points: [new Vector3(10.18, 0.06, 25.43)],
+                    rotation: 2.7,
+                    amount: 1,
+                    race: "humanoid",
+                    material: 9,
+                    head: "Head_Rogue",
+                    name: "Merchant Elara",
+                    interactable: {
+                        title: "Talk",
+                        data: [
+                            {
+                                type: "text",
+                                text: "Remember, a well-prepared adventurer is a successful adventurer. Stock up before you head out!",
+                                vendor: {
+                                    items: [{ key: "potion_small_red" }, { key: "potion_small_blue" }],
+                                },
+                                isEndOfDialog: true,
+                            },
+                        ],
+                    },
+                },
+
+                // SORCERESS
+                {
+                    key: "lh_town_sorceress",
+                    type: "static",
+                    behaviour: "idle",
+                    aggressive: false,
+                    canAttack: false,
+                    points: [new Vector3(59.43, 8.01, 40.29)],
+                    rotation: 2.79,
+                    radius: 0,
+                    amount: 1,
+                    race: "humanoid",
+                    material: 7,
+                    head: "Head_Mage",
+                    name: "Mira The Sorceress",
+                    baseHealth: 5000,
+                    equipment: [
+                        {
+                            key: "hat_01",
+                            slot: PlayerSlots.HEAD,
+                        },
+                    ],
+                    interactable: {
+                        title: "Talk",
+                        data: [
+                            {
+                                type: "text",
+                                text: "Ah, another seeker of knowledge. What arcane mysteries can I help you unlock today?",
+                                trainer: {
+                                    abilities: [{ key: "fire_dart" }, { key: "poison" }],
+                                },
+                            },
+                        ],
+                    },
+                },
+
+                // MEDIC
+                {
+                    key: "lh_town_priestress",
+                    type: "static",
+                    behaviour: "idle",
+                    aggressive: false,
+                    canAttack: false,
+                    points: [new Vector3(7.45, 0.1, -28.12)],
+                    rotation: 3.12,
+                    amount: 2,
+                    race: "humanoid",
+                    material: 6,
+                    head: "Head_Mage",
+                    name: "Medic Alice",
+                    equipment: [
+                        {
+                            key: "hat_01",
+                            slot: PlayerSlots.HEAD,
+                        },
+                    ],
+                    interactable: {
+                        title: "Talk",
+                        data: [
+                            {
+                                type: "text",
+                                text: "Welcome. How can I assist you in your journey?",
+                                quests: [{ key: "LH_DANGEROUS_ERRANDS_01" }],
+                                trainer: {
+                                    abilities: [{ key: "light_heal" }],
+                                },
+                                buttons: [
+                                    { label: "Can you heal me?", goToDialog: 1 },
+                                    { label: "Sorry, I'm busy adventuring.", goToDialog: 2 },
+                                ],
+                            },
+                            {
+                                type: "text",
+                                text: "There we go. Take a moment to rest and recover. If you have any questions or seek further guidance, do not hesitate to ask - I'm here to support you in your time of need.",
+                                isEndOfDialog: true,
+                                triggeredByClosing: {
+                                    type: "cast_ability",
+                                    ability: "heal",
+                                    target: "target",
+                                },
+                            },
+                            {
+                                type: "text",
+                                text: "Very well, safe travels on your chosen path.",
+                                buttonName: "Thank you",
+                                isEndOfDialog: true,
+                            },
+                        ],
+                    },
+                },
+
+                // FARMER
+                {
+                    key: "lh_town_farmer",
+                    type: "static",
+                    behaviour: "idle",
+                    aggressive: false,
+                    canAttack: false,
+                    points: [new Vector3(13.15, 0.06, 41.13)],
+                    rotation: 2.4,
+                    amount: 1,
+                    race: "humanoid",
+                    material: 15,
+                    head: "Head_Engineer",
+                    name: "Farmer Jorin",
+                    interactable: {
+                        title: "Talk",
+                        data: [
+                            {
+                                type: "text",
+                                text: "It's hard work, but honest work. The land provides for those who tend to it with care",
+                                isEndOfDialog: true,
+                            },
+                        ],
+                    },
+                },
+
+                // BARTENDER
+                {
+                    key: "lh_town_bartender",
+                    type: "static",
+                    behaviour: "idle",
+                    aggressive: false,
+                    canAttack: false,
+                    points: [new Vector3(40.32, 0.1, 20.88)],
+                    rotation: 1.85,
+                    amount: 1,
+                    race: "humanoid",
+                    material: 19,
+                    head: "Head_Engineer",
+                    name: "Bartender Morin",
+                    interactable: {
+                        title: "Talk",
+                        data: [
+                            {
+                                type: "text",
+                                text: "Welcome to the tavern! Sit, have a drink, and share your tales of adventure.",
+                                isEndOfDialog: true,
+                            },
+                        ],
+                    },
+                },
+
+                // CARETAKER
+                {
+                    key: "lh_town_caretaker",
+                    type: "static",
+                    behaviour: "idle",
+                    aggressive: false,
+                    canAttack: false,
+                    points: [new Vector3(47.54, 0.06, 67.27)],
+                    rotation: 1.5,
+                    amount: 1,
+                    race: "humanoid",
+                    material: 8,
+                    head: "Head_Barbarian",
+                    name: "Caretaker Ren",
+                    interactable: {
+                        title: "Talk",
+                        data: [
+                            {
+                                type: "text",
+                                text: "The cemetery holds many secrets. Respect the dead, and they may offer you their wisdom.",
+                                isEndOfDialog: true,
+                            },
+                        ],
+                    },
+                },
+
+                // MADAME SERAPHINA
+                {
+                    key: "lh_town_seraphina",
+                    type: "static",
+                    behaviour: "idle",
+                    aggressive: false,
+                    canAttack: false,
+                    points: [new Vector3(-12.24, 0.06, 17.5)],
+                    rotation: -1.5,
+                    amount: 2,
+                    race: "humanoid",
+                    material: 12,
+                    head: "Head_Mage",
+                    name: "Madame Seraphina",
+                    interactable: {
+                        title: "Talk",
+                        data: [
+                            {
+                                type: "text",
+                                text: "Ah, a new face! Please, make yourself at home and enjoy our performances.",
+                                isEndOfDialog: true,
+                            },
+                        ],
+                    },
+                },
+
+                {
+                    key: "lh_town_citizen",
+                    type: "path",
+                    behaviour: "patrol",
+                    aggressive: false,
+                    canAttack: false,
+                    points: [
+                        new Vector3(26.33, 0.06, -8.77),
+                        new Vector3(25.96, 0.06, 25.97),
+                        new Vector3(-18.52, 0.06, 30.14),
+                        new Vector3(-23.42, 0.06, 8.63),
+                        new Vector3(-14.8, 0.06, -8.68),
+                    ],
+                    rotation: -1.5,
+                    amount: 5,
+                    race: "humanoid",
+                    material: 0,
+                    head: "Head_Base",
+                    name: "Citizen",
+                    baseSpeed: Speed.VERY_SLOW,
+                    randomize: true,
+                    interactable: {
+                        title: "Talk",
+                        data: [
+                            {
+                                type: "text",
+                                text: "Ah, @PlayerName!. It's nice to meet you.",
+                                isEndOfDialog: true,
+                            },
+                        ],
+                    },
+                },
+
+                ////////////////////////
+                //////// ENEMIES ///////
+
+                {
+                    key: "lh_town_bandits2",
+                    type: "area",
+                    behaviour: "patrol",
+                    aggressive: true,
+                    canAttack: true,
+                    points: [new Vector3(36.29, 0.06, -0.59), new Vector3(45.93, 0.06, 0.88), new Vector3(40.4, 0.06, 7.2), new Vector3(32.86, 0.06, 8.73)],
+                    amount: 5,
+                    race: "skeleton_01",
+                    material: 0,
+                    name: "Skeleton",
+                    baseHealth: 100,
+                    baseSpeed: Speed.VERY_SLOW,
+                    baseDamageMultiplier: 1, // multiplicater for damage
+                    experienceGain: { min: 100, max: 200 },
+                    goldGain: { min: 10, max: 20 },
+                    equipment: [
+                        {
+                            key: "shield_01",
+                            slot: PlayerSlots.OFF_HAND,
+                        },
+                        {
+                            key: "sword_01",
+                            slot: PlayerSlots.WEAPON,
+                        },
+                    ],
+                    abilities: [{ key: "base_attack", chance: 1 }],
+                    drops: DEFAULT_LOOT,
+                },
+
+                {
+                    key: "lh_town_bandits",
+                    type: "area",
+                    behaviour: "patrol",
+                    aggressive: true,
+                    canAttack: true,
+                    points: [
+                        new Vector3(-11.15, 0.06, 68.05),
+                        new Vector3(-10.45, 0.06, 87.2),
+                        new Vector3(1.1, 0.06, 79.36),
+                        new Vector3(14.34, 0.06, 86.56),
+                        new Vector3(27.81, 0.06, 89.47),
+                        new Vector3(44.71, 0.06, 82.98),
+                        new Vector3(28.44, 0.06, 78.08),
+                    ],
+                    amount: 10,
+                    race: "humanoid",
+                    material: 17,
+                    head: "Head_Rogue",
+                    name: "Bandit",
+                    baseHealth: 100,
+                    baseSpeed: Speed.VERY_SLOW,
+                    baseDamageMultiplier: 2, // multiplicater for damage
+                    experienceGain: { min: 1000, max: 2000 },
+                    goldGain: { min: 100, max: 200 },
+                    equipment: [
+                        {
+                            key: "shield_01",
+                            slot: PlayerSlots.OFF_HAND,
+                        },
+                        {
+                            key: "sword_01",
+                            slot: PlayerSlots.WEAPON,
+                        },
+                    ],
+                    abilities: [
+                        { key: "base_attack", chance: 0.8 },
+                        { key: "slice_attack", chance: 0.2 },
+                        { key: "fire_dart", chance: 0.1 },
+                    ],
+                    drops: DEFAULT_LOOT,
+                },
+            ],
+        },
+    },
+    training_ground: {
+        title: "Training Ground",
+        key: "training_ground",
+        mesh: "training_ground",
+        sun: true,
+        sunIntensity: 1,
+        fog: false,
+        spawnPoint: {
+            x: 0,
+            y: 0,
+            z: 0,
+            rot: -180,
+        },
+        waterPlane: false,
+        skyColor: [0, 0, 0, 1],
+        music: "MUSIC_01",
+        dynamic: {
+            interactive: [],
+            spawns: [
+                {
+                    key: "spawn_01",
+                    type: "static",
+                    behaviour: "idle",
+                    aggressive: true,
+                    canAttack: true,
+                    points: [new Vector3(8.67, 0, -14.59)],
+                    amount: 1,
+                    baseHealth: 8000,
+                    race: "skeleton_01",
+                    material: 0,
+                    name: "Dummy 2",
+                    baseSpeed: Speed.VERY_SLOW,
+                },
+                {
+                    key: "spawn_02",
+                    type: "global",
+                    behaviour: "area",
+                    aggressive: true,
+                    canAttack: true,
+                    points: [new Vector3(12, 0, -14.59)],
+                    amount: 1,
+                    race: "skeleton_01",
+                    material: 0,
+                    name: "Dummy 1",
+
+                    baseHealth: 100,
+                    baseSpeed: Speed.VERY_SLOW,
+                    baseDamageMultiplier: 2, // multiplicater for damage
+                    experienceGain: { min: 5000, max: 10000 },
+                    goldGain: { min: 100, max: 200 },
+                    equipment: [
+                        {
+                            key: "sword_01",
+                            slot: PlayerSlots.WEAPON,
+                        },
+                    ],
+                    abilities: [
+                        { key: "base_attack", chance: 0.3 },
+                        { key: "fire_dart", chance: 0.7 },
+                    ],
+                },
+            ],
+        },
+    },
+    // Act 1 dungeon (MQ13-16 in docs/QUESTLINE_ACT1.md - "Into the Depths"). Real environment
+    // built from KayKit Dungeon Remastered (art/environments/kaykit-dungeon-remastered/,
+    // see construction script referenced in docs/TECHNICAL_PLAN.md §2) instead of reusing a
+    // stock t5c mesh - a single 24x16 stone hall: doorway/entrance at the west end (x~0-4),
+    // open floor through the middle (wave 1/2 fight space for MQ14), rubble + a gold chest
+    // dressing the boss end (x~18-22, MQ16). Kept the internal key `lh_dungeon_01` (same
+    // reasoning as `lh_town`/Origin - save/quest-location compatibility) but pointed `mesh`
+    // at the new `shard_dungeon_01` asset.
+    lh_dungeon_01: {
+        title: "Dungeon Level 1",
+        key: "lh_dungeon_01",
+        mesh: "shard_dungeon_01",
+        sun: false,
+        sunIntensity: 1,
+        fog: false,
+        spawnPoint: {
+            x: 3,
+            y: 0,
+            z: -2,
+            rot: 0,
+        },
+        waterPlane: false,
+        skyColor: [0, 0, 0, 1],
+        music: "MUSIC_01",
+        dynamic: {
+            interactive: [
+                {
+                    // back to arrival_clearing, just inside the entrance doorway
+                    type: "zone_change",
+                    from: new Vector3(2, 0.1, -1),
+                    to_map: "arrival_clearing",
+                    to_vector: new Vector3(8, 0, 4),
+                },
+            ],
+            spawns: [
+                {
+                    key: "spawn_01",
+                    type: "global",
+                    behaviour: "patrol",
+                    aggressive: true,
+                    canAttack: true,
+                    // Placeholder race - "rat_01" is referenced here (and by training_ground)
+                    // but was never actually added to RacesDB (see TECHNICAL_PLAN.md §3 - the
+                    // same gap as arrival_clearing's Wyrmling). skeleton_01 is a complete,
+                    // proven-working entry and fits a dungeon thematically besides.
+                    points: [
+                        new Vector3(9, 0.1, -6),
+                        new Vector3(14, 0.1, -10),
+                        new Vector3(9, 0.1, -14),
+                        new Vector3(18, 0.1, -6),
+                        new Vector3(20, 0.1, -10),
+                        new Vector3(18, 0.1, -14),
+                    ],
+                    radius: 0,
+                    // MQ14 ("Descent") calls this "soloable at tutorial difficulty" - 8
+                    // aggressive skeletons all converging on the entrance at once (tried
+                    // during testing) is very much not that. 3 is a real fight without
+                    // being a wipe the moment you walk in.
+                    amount: 3,
+                    race: "skeleton_01",
+                    material: 0,
+                    name: "Skeleton",
+                    baseSpeed: Speed.VERY_SLOW,
+                },
+            ],
+        },
+    },
+};
+
+export { LocationsDB };
