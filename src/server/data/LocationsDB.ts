@@ -43,6 +43,19 @@ let LocationsDB = {
                     to_vector: new Vector3(13, 0, -25.7),
                     requires_quest_completed: "MQ06_VOICE_FROM_ORIGIN",
                 },
+                {
+                    // down into the Act 1 dungeon (MQ13+ in docs/QUESTLINE_ACT1.md) - always
+                    // open for now, not yet gated behind Rho's quest chain. Entered from here
+                    // rather than Origin: Origin's stock navmesh around the landing spot is a
+                    // small, oddly-bounded pocket (see TECHNICAL_PLAN.md §3) that repeatedly
+                    // refused to path anywhere beyond a couple of units in testing, whereas
+                    // this zone's navmesh is large and already well-proven (Wyrmling/Dessa
+                    // signal are both reachable well beyond this range).
+                    type: "zone_change",
+                    from: new Vector3(8, 0.1, 2),
+                    to_map: "lh_dungeon_01",
+                    to_vector: new Vector3(3, 0, -2),
+                },
             ],
             spawns: [
                 {
@@ -637,18 +650,26 @@ let LocationsDB = {
             ],
         },
     },
+    // Act 1 dungeon (MQ13-16 in docs/QUESTLINE_ACT1.md - "Into the Depths"). Real environment
+    // built from KayKit Dungeon Remastered (art/environments/kaykit-dungeon-remastered/,
+    // see construction script referenced in docs/TECHNICAL_PLAN.md §2) instead of reusing a
+    // stock t5c mesh - a single 24x16 stone hall: doorway/entrance at the west end (x~0-4),
+    // open floor through the middle (wave 1/2 fight space for MQ14), rubble + a gold chest
+    // dressing the boss end (x~18-22, MQ16). Kept the internal key `lh_dungeon_01` (same
+    // reasoning as `lh_town`/Origin - save/quest-location compatibility) but pointed `mesh`
+    // at the new `shard_dungeon_01` asset.
     lh_dungeon_01: {
         title: "Dungeon Level 1",
         key: "lh_dungeon_01",
-        mesh: "lh_dungeon_01",
+        mesh: "shard_dungeon_01",
         sun: false,
         sunIntensity: 1,
         fog: false,
         spawnPoint: {
-            x: 0,
+            x: 3,
             y: 0,
-            z: 0,
-            rot: -180,
+            z: -2,
+            rot: 0,
         },
         waterPlane: false,
         skyColor: [0, 0, 0, 1],
@@ -656,10 +677,11 @@ let LocationsDB = {
         dynamic: {
             interactive: [
                 {
+                    // back to arrival_clearing, just inside the entrance doorway
                     type: "zone_change",
-                    from: new Vector3(1.3, 0.5, -3.3),
-                    to_map: "lh_town",
-                    to_vector: new Vector3(13, 0, -25.7),
+                    from: new Vector3(2, 0.1, -1),
+                    to_map: "arrival_clearing",
+                    to_vector: new Vector3(8, 0, 4),
                 },
             ],
             spawns: [
@@ -669,19 +691,27 @@ let LocationsDB = {
                     behaviour: "patrol",
                     aggressive: true,
                     canAttack: true,
+                    // Placeholder race - "rat_01" is referenced here (and by training_ground)
+                    // but was never actually added to RacesDB (see TECHNICAL_PLAN.md §3 - the
+                    // same gap as arrival_clearing's Wyrmling). skeleton_01 is a complete,
+                    // proven-working entry and fits a dungeon thematically besides.
                     points: [
-                        new Vector3(-10.6, 0.1, -2.55),
-                        new Vector3(-20.54, 0.1, 7.72),
-                        new Vector3(-20.75, 0.1, -2.05),
-                        new Vector3(-21.42, 0.1, -19.39),
-                        new Vector3(-14.59, 0.1, -30.15),
-                        new Vector3(2.78, 0.1, -30.45),
+                        new Vector3(9, 0.1, -6),
+                        new Vector3(14, 0.1, -10),
+                        new Vector3(9, 0.1, -14),
+                        new Vector3(18, 0.1, -6),
+                        new Vector3(20, 0.1, -10),
+                        new Vector3(18, 0.1, -14),
                     ],
                     radius: 0,
-                    amount: 25,
-                    race: "rat_01",
+                    // MQ14 ("Descent") calls this "soloable at tutorial difficulty" - 8
+                    // aggressive skeletons all converging on the entrance at once (tried
+                    // during testing) is very much not that. 3 is a real fight without
+                    // being a wipe the moment you walk in.
+                    amount: 3,
+                    race: "skeleton_01",
                     material: 0,
-                    name: "Rat",
+                    name: "Skeleton",
                     baseSpeed: Speed.VERY_SLOW,
                 },
             ],

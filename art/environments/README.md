@@ -11,6 +11,14 @@
    - License: CC0
    - Not yet found on a GitHub mirror — try https://kaylousberg.itch.io/kaykit-character-animations if downloading directly, or check the KayKit-Game-Assets GitHub org for a mirror
 
+## Built compositions
+
+- **`shards/dungeon_01/`** — the Act 1 dungeon hall (`shard_dungeon_01`, wired to the
+  `lh_dungeon_01` location in `src/server/data/LocationsDB.ts`), built entirely from
+  KayKit Dungeon Remastered pieces. `build.py` is a Blender headless script that
+  assembles it and writes both the visible mesh and its navmesh into `public/models/`
+  directly — re-run it to change the layout. See `docs/TECHNICAL_PLAN.md` §2/§4.
+
 ## Folder convention going forward
 
 ```
