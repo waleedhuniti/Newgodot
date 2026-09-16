@@ -49,7 +49,9 @@ export class BrainSchema extends Entity {
     public manaRegen: number = 0;
     public healthRegen: number = 0;
     public speed: number = 0;
-    public experienceGain: number = 0;
+    public experienceGain = { min: 0, max: 0 };
+    public goldGain = { min: 0, max: 0 };
+    public drops = [];
     public isMoving: boolean = false;
     public isDead: boolean = false;
     public raceData;

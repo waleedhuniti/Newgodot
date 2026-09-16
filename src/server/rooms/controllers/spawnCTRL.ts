@@ -193,7 +193,15 @@ export class spawnCTRL {
         let speed = spawn.baseSpeed ?? Speed.MEDIUM;
         let head = spawn.head ?? "Head_Base";
         let material = spawn.material ?? 0;
-        let experienceGain = spawn.experienceGain ?? 0;
+        // fall back to the race's defaults (RacesDB.ts), not straight to a bare 0/[] -
+        // dropCTRL.ts's addExperience/addGold/dropItems only ever look at the spawn's own
+        // override (AI_SPAWN_INFO) or these fields, so a spawn that doesn't bother
+        // overriding them (most won't) needs the race's values carried through here or an
+        // enemy silently gives no reward - or worse, corrupts player XP to NaN, since
+        // dividing/reading .min off a bare number crashes or produces NaN, not a clean 0.
+        let experienceGain = spawn.experienceGain ?? raceData.experienceGain ?? { min: 0, max: 0 };
+        let goldGain = spawn.goldGain ?? raceData.goldGain ?? { min: 0, max: 0 };
+        let drops = spawn.drops ?? raceData.drops ?? [];
 
         // if randomize
         if (spawn.randomize) {
@@ -229,6 +237,8 @@ export class spawnCTRL {
             spawn_id: spawn.index,
             spawn_key: spawn.key,
             experienceGain: experienceGain,
+            goldGain: goldGain,
+            drops: drops,
             initial_equipment: spawn.equipment,
         };
 
