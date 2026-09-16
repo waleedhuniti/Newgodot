@@ -13,6 +13,8 @@
         "server-debug": "ts-node-dev --respawn --inspect --transpile-only src/server/index.ts",
         "server-dev": "ts-node-dev --respawn --inspect --transpile-only src/server/index.ts",
         "server-start": "ts-node --transpile-only src/server/index.ts",
+        "build": "npm run client-build",
+        "start": "NODE_ENV=production ts-node --transpile-only src/server/index.ts",
         "server-build": "tsc && cp -r public dist",
         "loadtest": "npx tsx loadtest/test.ts --room game_room --numClients 10 --endpoint ws://localhost:3000"
     },

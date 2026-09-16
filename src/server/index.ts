@@ -41,7 +41,10 @@ class GameServer {
         //////////////////////////////////////////////////
         ///////////// COLYSEUS GAME SERVER ///////////////
         //////////////////////////////////////////////////
-        const port = this.config.port;
+        // hosts like Railway assign the port at runtime via $PORT - Config.port (3000) is
+        // the local-dev default. Kept out of the shared Config class since that file is
+        // also bundled into the client, where `process.env.PORT` has no meaning.
+        const port = Number(process.env.PORT) || this.config.port;
         const app = express();
         app.use(cors());
 
