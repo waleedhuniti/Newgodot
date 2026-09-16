@@ -33,7 +33,17 @@ let LocationsDB = {
         skyColor: [0, 0, 0, 1],
         music: "MUSIC_01",
         dynamic: {
-            interactive: [],
+            interactive: [
+                // "Portal to Origin unlocked" reward from MQ06 - gated on that quest's
+                // completion via requires_quest_completed (see dynamicCTRL.ts update()).
+                {
+                    type: "zone_change",
+                    from: new Vector3(-6, 0, -12),
+                    to_map: "lh_town",
+                    to_vector: new Vector3(13, 0, -25.7),
+                    requires_quest_completed: "MQ06_VOICE_FROM_ORIGIN",
+                },
+            ],
             spawns: [
                 {
                     key: "arrival_wyrmling",
@@ -65,11 +75,44 @@ let LocationsDB = {
                         ],
                     },
                 },
+                // MQ06 in docs/QUESTLINE_ACT1.md ("A Voice From Elsewhere") - a "signal
+                // projection" of Dessa Vail, not physically present yet. Reuses the
+                // sorceress's mystic-blue material/head as a stand-in for a translucent
+                // projection look (no shader for that has been built - see TECHNICAL_PLAN.md).
+                {
+                    key: "arrival_dessa_signal",
+                    type: "static",
+                    behaviour: "idle",
+                    aggressive: false,
+                    canAttack: false,
+                    points: [new Vector3(-6, 0, -6)],
+                    rotation: 1.2,
+                    amount: 1,
+                    race: "humanoid",
+                    material: 7,
+                    head: "Head_Mage",
+                    name: "Dessa Vail (Signal)",
+                    baseHealth: 9999,
+                    interactable: {
+                        title: "Listen",
+                        data: [
+                            {
+                                type: "text",
+                                text: "You felt the pull, and you didn't run from it - that already puts you ahead of most people who ever will. I'm Dessa Vail. I coordinate things from Origin. You'll have questions. Come find me, and I'll do my best.",
+                                quests: [{ key: "MQ06_VOICE_FROM_ORIGIN" }],
+                                isEndOfDialog: true,
+                            },
+                        ],
+                    },
+                },
             ],
         },
     },
     lh_town: {
-        title: "Lighthaven",
+        // Renamed in-fiction to "Origin" - the Anchor hub in docs/WORLD_LORE.md / Chapter 3
+        // of docs/QUESTLINE_ACT1.md. Kept the internal key "lh_town" (save/quest-location
+        // compatibility with content already wired to it) rather than duplicating the map.
+        title: "Origin",
         key: "lh_town",
         mesh: "lh_town",
         sun: true,
@@ -104,10 +147,46 @@ let LocationsDB = {
                     from: new Vector3(-8.4, 0, -49.08),
                     to_vector: new Vector3(-22, 0, -37.8),
                 },
+                {
+                    // back to arrival_clearing (the way in is arrival_clearing's gated
+                    // portal above - this is just the return trip, always open)
+                    type: "zone_change",
+                    from: new Vector3(13, 0.1, -20),
+                    to_map: "arrival_clearing",
+                    to_vector: new Vector3(-6, 0, -4),
+                },
             ],
             spawns: [
                 ///////////////////////
                 ///////// NPC /////////
+
+                // DESSA VAIL - Origin's coordinator, giver of MQ07 (docs/QUESTLINE_ACT1.md
+                // Chapter 3). Placed right where the arrival_clearing portal drops the player.
+                {
+                    key: "origin_dessa",
+                    type: "static",
+                    behaviour: "idle",
+                    aggressive: false,
+                    canAttack: false,
+                    points: [new Vector3(13, 0.1, -22)],
+                    rotation: 3.14,
+                    amount: 1,
+                    race: "humanoid",
+                    material: 7,
+                    head: "Head_Mage",
+                    name: "Dessa Vail",
+                    interactable: {
+                        title: "Talk",
+                        data: [
+                            {
+                                type: "text",
+                                text: "This is Origin. Built by Anchors, for Anchors - the one place in the Continuum that didn't happen to us, we made it happen. Bank's there if you want somewhere safer than your pockets. Market's there. And that spire - that's where your partner will Ascend, when it's ready. Not yet, though.",
+                                quests: [{ key: "MQ07_WELCOME_TO_ORIGIN" }],
+                                isEndOfDialog: true,
+                            },
+                        ],
+                    },
+                },
 
                 // BLACKSMITH
                 {
@@ -224,7 +303,7 @@ let LocationsDB = {
                     },
                 },
 
-                // PRIESTESS
+                // MEDIC
                 {
                     key: "lh_town_priestress",
                     type: "static",
@@ -237,7 +316,7 @@ let LocationsDB = {
                     race: "humanoid",
                     material: 6,
                     head: "Head_Mage",
-                    name: "Priestess Alice ",
+                    name: "Medic Alice",
                     equipment: [
                         {
                             key: "hat_01",
@@ -249,7 +328,7 @@ let LocationsDB = {
                         data: [
                             {
                                 type: "text",
-                                text: "Blessings of Athlea upon you. How can I assist you in your journey?",
+                                text: "Welcome. How can I assist you in your journey?",
                                 quests: [{ key: "LH_DANGEROUS_ERRANDS_01" }],
                                 trainer: {
                                     abilities: [{ key: "light_heal" }],
@@ -261,7 +340,7 @@ let LocationsDB = {
                             },
                             {
                                 type: "text",
-                                text: "Praise be to the Goddess Athlea for her benevolent grace! I am but her humble vessel, and it is her divine power that has allowed me to aid in your healing. Please take a moment to rest and recover. If you have any questions or seek further guidance, do not hesitate to ask. The goddess's blessings are with you, and I am here to support you in your time of need.",
+                                text: "There we go. Take a moment to rest and recover. If you have any questions or seek further guidance, do not hesitate to ask - I'm here to support you in your time of need.",
                                 isEndOfDialog: true,
                                 triggeredByClosing: {
                                     type: "cast_ability",
@@ -271,7 +350,7 @@ let LocationsDB = {
                             },
                             {
                                 type: "text",
-                                text: "Very well, may the Goddess watch over your chosen path.",
+                                text: "Very well, safe travels on your chosen path.",
                                 buttonName: "Thank you",
                                 isEndOfDialog: true,
                             },

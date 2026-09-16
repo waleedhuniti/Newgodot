@@ -20,7 +20,7 @@ export class QuestDialog {
     public DEFAULT_TEXT_ACCEPTED: string = "Many thanks, please complete following objective and come back to me.";
     public DEFAULT_TEXT_ONGOING: string = "Please complete following objective and come back to me";
     public DEFAULT_TEXT_READYTOCOMPLETE: string = "Objective complete, please accept these small tokens of my gratitude";
-    public DEFAULT_TEXT_COMPLETED: string = "Thank you, and may the goddess Althea be with you.";
+    public DEFAULT_TEXT_COMPLETED: string = "Thank you, and safe travels out there.";
 
     constructor(panel: Panel_Dialog, quest_id) {
         this.panel = panel;

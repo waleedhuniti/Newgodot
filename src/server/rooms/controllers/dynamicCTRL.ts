@@ -22,6 +22,17 @@ export class dynamicCTRL {
                 let distanceTo = currentPos.distanceTo(element.from);
 
                 if (distanceTo < 2) {
+                    // some interactive points (e.g. the portal to Origin) only open up
+                    // after completing a specific quest - see MQ06 in
+                    // docs/QUESTLINE_ACT1.md ("Portal to Origin unlocked" reward).
+                    // status 1 = completed (set in questUpdate() below).
+                    if (element.requires_quest_completed) {
+                        let requiredQuest = this._player.player_data.quests.get(element.requires_quest_completed);
+                        if (!requiredQuest || requiredQuest.status !== 1) {
+                            return;
+                        }
+                    }
+
                     if (element.type === "teleport") {
                         this._player.x = element.to_vector.x;
                         this._player.y = element.to_vector.y;

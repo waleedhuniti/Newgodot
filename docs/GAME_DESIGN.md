@@ -6,6 +6,8 @@ A third-person online MMORPG where players explore a persistent world, **capture
 
 This is an **original IP**. No character designs, creature names, lore, or code are taken from any existing commercial monster-taming game. Only broad genre conventions (which are not copyrightable) are reused: capture mechanics, tiered evolution, team-based battling, PvE zones + PvP arenas, guild/social systems.
 
+**No religious content.** No mention of gods, deities, divinity, prayer, blessings, or any other religious framing, invented or real, anywhere in the game (dialogue, lore, item/ability flavor text, etc.). The inherited t5c base had one NPC written with this kind of flavor text ("Priestess Alice", invoking a fictional goddess) — reflavored to a secular "Medic Alice" with the same mechanical role (see `docs/TECHNICAL_PLAN.md` §2). Watch for more of this if pulling in other stock t5c content.
+
 ## 2. Pillars
 
 1. **Collect & grow** — every creature has a multi-stage evolution path; players form emotional attachment to a starter and build toward specific end-tier forms.

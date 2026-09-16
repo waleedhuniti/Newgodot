@@ -23,6 +23,45 @@ let QuestsDB = {
             items: [],
         },
     },
+    // MQ06 in docs/QUESTLINE_ACT1.md ("A Voice From Elsewhere"). Talk to the Dessa Vail
+    // signal NPC in arrival_clearing once to hear her intro, talk again to complete it -
+    // same TALK_TO pattern as MQ_FIRST_CONTACT. Completing it opens the portal to Origin
+    // (see LocationsDB.ts arrival_clearing's `requires_quest_completed` interactive point).
+    MQ06_VOICE_FROM_ORIGIN: {
+        key: "MQ06_VOICE_FROM_ORIGIN",
+        title: "A Voice From Elsewhere",
+        description:
+            "A flickering, translucent shape resolves a few steps away - not quite solid, more like a signal finding its shape. It's watching you, and it clearly expected you to be able to see it.",
+        objective: "Listen to what the signal calling itself Dessa Vail has to say.",
+        type: QuestObjective.TALK_TO,
+        location: "arrival_clearing",
+        spawn_key: "arrival_dessa_signal",
+        quantity: 1,
+        isRepeatable: false,
+        rewards: {
+            experience: 150,
+            gold: 0,
+            items: [],
+        },
+    },
+    // MQ07 in docs/QUESTLINE_ACT1.md ("Welcome to Origin"). Giver is Dessa Vail again, this
+    // time in person at Origin (the lh_town location, reflavored - see TECHNICAL_PLAN.md §4.5).
+    MQ07_WELCOME_TO_ORIGIN: {
+        key: "MQ07_WELCOME_TO_ORIGIN",
+        title: "Welcome to Origin",
+        description: "The signal you spoke with in the clearing turns out to have a body after all - Dessa Vail, waiting just past the portal.",
+        objective: "Talk to Dessa Vail at Origin.",
+        type: QuestObjective.TALK_TO,
+        location: "lh_town",
+        spawn_key: "origin_dessa",
+        quantity: 1,
+        isRepeatable: false,
+        rewards: {
+            experience: 150,
+            gold: 50,
+            items: [],
+        },
+    },
     LH_DANGEROUS_ERRANDS_01: {
         key: "LH_DANGEROUS_ERRANDS_01", // unique id
         title: "Dangerous Errands",
