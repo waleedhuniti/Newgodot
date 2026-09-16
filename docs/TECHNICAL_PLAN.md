@@ -98,14 +98,26 @@ to happen again when assets are added/changed; the resulting `.import/` cache
   caught a real bug: `signal health_changed(current, max)` failed to parse
   because `max` is a reserved GDScript built-in, not a valid signal parameter
   name (fixed by renaming to `max_hp`).
+- `addons/wyvernbox/` / `addons/wyvernbox_prefabs/` — the "Wyvernbox"
+  inventory addon (MIT, vendored wholesale - see
+  `docs/THIRD_PARTY_LICENSES/wyvernbox-LICENSE.md`), provided to this project
+  by its owner. Only the core data model is used - `ItemType` (a Resource
+  defining a kind of item), `ItemStack` (count + type), and `Inventory`
+  (stacking, capacity, save/load, `count_all_items()`). Its click/2D-UI-
+  oriented ground-item-view, tooltip, and crafting systems aren't wired up -
+  they don't fit this game's WASD/mouse-look-captured controls, so our own
+  simpler walk-over `Pickup.gd` (below) is used instead for now.
+  `resources/item_types/ItemType_Coin.tres`/`ItemType_Key.tres` are the two
+  item types defined so far.
 - `scripts/Pickup.gd` — a spinning `Area` that grants an item to whatever
   enters it (checks `has_method("add_item")`) and frees itself.
   `scenes/CoinPickup.tscn`/`scenes/KeyPickup.tscn` wrap it with the KayKit
-  dungeon pack's `coin.gltf.glb`/`key.gltf.glb` models. `Player.gd` tracks
-  `inventory` (a `{item_id: count}` dictionary) via `add_item()` and an
-  `inventory_changed` signal.
-- `scenes/HUD.tscn`/`scripts/HUD.gd` — a `CanvasLayer` label reading the
-  player's inventory off that signal, showing coin/key counts.
+  dungeon pack's `coin.gltf.glb`/`key.gltf.glb` models. `Player.gd` owns an
+  `Inventory` (`inventory.try_add_item(ItemStack.new(item_type, amount))`
+  via `add_item()`).
+- `scenes/HUD.tscn`/`scripts/HUD.gd` — a `CanvasLayer` label reading
+  `inventory.count_all_items()` off the `Inventory`'s `item_stack_*` signals,
+  showing coin/key counts.
 - Loot: `Enemy.gd`'s `die()` spawns a `CoinPickup` at its death position
   (`loot_scene`, currently always a coin - no drop table yet).
 - Headless pickup verification: `--test-pickup` teleports the player onto
@@ -114,6 +126,22 @@ to happen again when assets are added/changed; the resulting `.import/` cache
   right item and despawn. `--test-combat`'s per-30-frame log now also
   counts pickups in the world, confirming the enemy's coin drop appears
   exactly when it dies.
+- Two real bugs found integrating Wyvernbox, both specific to Godot 3.x
+  (the addon itself is correct Godot 3.x code, these are compatibility traps
+  rather than upstream mistakes):
+  - Godot 3.x's editor never wrote `_global_script_classes` into
+    `project.godot` from a plain `godot3 --editor --quit` pass (unlike our
+    own scripts, which happened to get picked up before) - every
+    `class_name`-declared identifier across all 24 Wyvernbox scripts came
+    back "isn't declared in the current scope". Fixed by generating that
+    block ourselves from a scan of every `class_name` declaration in the
+    project rather than relying on the editor to write it.
+  - `Inventory.new()` left `_cells` empty (so every `try_add_item()` silently
+    failed) because Godot 3.x doesn't invoke a `setget` setter for a
+    property's initial declared default (`export var width := 8 setget
+    _set_width`) - only for an explicit assignment after construction. Fixed
+    by assigning `inventory.width = 20` in `Player.gd`'s `_ready()` to force
+    the setter to actually run.
 
 Not yet built: quests, creature-taming, a real drop table - everything
 beyond character movement, basic melee combat, and simple item pickup is

@@ -1,6 +1,6 @@
 extends Area
 
-export var item_id = "coin"
+export(Resource) var item_type
 export var amount = 1
 export var spin_speed = 1.5
 
@@ -12,6 +12,6 @@ func _process(delta):
 	rotate_y(spin_speed * delta)
 
 func _on_body_entered(body):
-	if body.has_method("add_item"):
-		body.add_item(item_id, amount)
+	if item_type and body.has_method("add_item"):
+		body.add_item(item_type, amount)
 		queue_free()

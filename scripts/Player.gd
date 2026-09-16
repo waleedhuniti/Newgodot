@@ -26,18 +26,22 @@ var _attack_timer = 0.0
 var _skill_timer = 0.0
 var _busy_until = 0.0
 
-var inventory = {}
-signal inventory_changed(inventory)
+var inventory = Inventory.new()
 
 func _ready():
 	max_health = 100.0
 	health = max_health
+	# Godot 3.x doesn't call a setget setter for a property's initial declared
+	# default (only on explicit assignment after construction), so Inventory's
+	# `_cells` array never gets sized from its `width := 8` export default -
+	# it stays empty and every try_add_item() silently fails. Assigning here
+	# forces the setter to actually run.
+	inventory.width = 20
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	play_anim("Idle")
 
-func add_item(item_id, item_amount = 1):
-	inventory[item_id] = inventory.get(item_id, 0) + item_amount
-	emit_signal("inventory_changed", inventory)
+func add_item(item_type, item_amount = 1):
+	inventory.try_add_item(ItemStack.new(item_type, item_amount))
 
 func _unhandled_input(event):
 	if event is InputEventMouseMotion and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:

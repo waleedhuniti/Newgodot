@@ -67,7 +67,11 @@ func _run_test_pickup_step():
 			player.transform.origin = next.global_transform.origin
 			print("TEST-PICKUP: moved player to ", next.name)
 	else:
-		print("TEST-PICKUP: final inventory = ", player.inventory)
+		var counts = player.inventory.count_all_items()
+		var readable = {}
+		for item_type in counts:
+			readable[item_type.name] = counts[item_type]
+		print("TEST-PICKUP: final inventory = ", readable)
 
 func _debug_dump():
 	var player = get_node_or_null("Player")
