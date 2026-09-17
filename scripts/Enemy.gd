@@ -13,9 +13,16 @@ var _attack_timer = 0.0
 var _busy_until = 0.0
 var _player = null
 
+var health_bar_scene = preload("res://scenes/EnemyHealthBar.tscn")
+
 func _ready():
 	add_to_group("enemies")
 	play_anim("Idle")
+	var bar = health_bar_scene.instance()
+	add_child(bar)
+	bar.set_target(self)
+	bar.set_health(health, max_health)
+	connect("health_changed", bar, "set_health")
 
 func _time_now():
 	return OS.get_ticks_msec() / 1000.0

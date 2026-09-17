@@ -13,8 +13,15 @@ export var attack_cooldown = 1.2
 export var skill_range = 20.0
 export var skill_damage = 14.0
 export var skill_cooldown = 4.0
+export var skill_mana_cost = 25.0
+export var max_mana = 100.0
+export var mana_regen_rate = 8.0
 
 var fireball_scene = preload("res://scenes/Fireball.tscn")
+
+var mana = max_mana
+
+signal mana_changed(current, mana_max)
 
 var velocity = Vector3.ZERO
 var camera_pivot_yaw = 0.0
@@ -33,6 +40,7 @@ var inventory = Inventory.new()
 func _ready():
 	max_health = 100.0
 	health = max_health
+	mana = max_mana
 	# Godot 3.x doesn't call a setget setter for a property's initial declared
 	# default (only on explicit assignment after construction), so Inventory's
 	# `_cells` array never gets sized from its `width := 8` export default -
@@ -77,9 +85,18 @@ func _clear_dead_target():
 		target = null
 
 func _try_use_skill():
-	if is_dead or target == null or target.is_dead:
+	if is_dead:
 		return
 	if _skill_timer > 0.0 or _time_now() < _busy_until:
+		return
+	if mana < skill_mana_cost:
+		return
+	# Auto-acquire the nearest enemy in range if nothing's targeted yet -
+	# without this, pressing 1 before ever clicking an enemy does nothing at
+	# all, silently, which looks exactly like "the skill doesn't work".
+	if target == null or target.is_dead:
+		target = _find_nearest_enemy_in_range()
+	if target == null:
 		return
 	var dist = global_transform.origin.distance_to(target.global_transform.origin)
 	if dist > skill_range:
@@ -88,7 +105,25 @@ func _try_use_skill():
 	play_anim("Spellcast_Shoot", true)
 	_busy_until = _time_now() + 0.6
 	_skill_timer = skill_cooldown
+	_spend_mana(skill_mana_cost)
 	_cast_fireball()
+
+func _spend_mana(amount):
+	mana = max(0.0, mana - amount)
+	emit_signal("mana_changed", mana, max_mana)
+
+func _find_nearest_enemy_in_range():
+	var enemies = get_tree().get_nodes_in_group("enemies")
+	var nearest = null
+	var nearest_dist = skill_range
+	for e in enemies:
+		if e.is_dead:
+			continue
+		var d = global_transform.origin.distance_to(e.global_transform.origin)
+		if d <= nearest_dist:
+			nearest = e
+			nearest_dist = d
+	return nearest
 
 func _cast_fireball():
 	var fireball = fireball_scene.instance()
@@ -117,6 +152,9 @@ func _physics_process(delta):
 		_attack_timer -= delta
 	if _skill_timer > 0.0:
 		_skill_timer -= delta
+	if mana < max_mana and not is_dead:
+		mana = min(max_mana, mana + mana_regen_rate * delta)
+		emit_signal("mana_changed", mana, max_mana)
 
 	camera_pivot.rotation.y = camera_pivot_yaw
 	camera_pivot.rotation.x = camera_pivot_pitch

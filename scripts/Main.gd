@@ -43,12 +43,26 @@ func _ready():
 		call_deferred("_setup_test_pickup")
 	if _test_fireball:
 		call_deferred("_setup_test_fireball")
+	if "--test-inventory-panel" in OS.get_cmdline_args():
+		call_deferred("_setup_test_inventory_panel")
+
+func _setup_test_inventory_panel():
+	var player = get_node_or_null("Player")
+	var hud = get_node_or_null("HUD")
+	if player and hud:
+		player.add_item(preload("res://resources/item_types/ItemType_Coin.tres"), 3)
+		player.add_item(_chest_key_type, 1)
+		hud.inventory_panel.visible = true
+		print("TEST-INVENTORY-PANEL: opened with items")
 
 func _setup_test_fireball():
+	# Deliberately doesn't pre-set player.target - this exercises the
+	# auto-acquire-nearest-enemy fallback in _try_use_skill(), which is
+	# exactly what a real player relies on when they press 1 without having
+	# clicked an enemy first.
 	var player = get_node_or_null("Player")
 	var enemies = get_tree().get_nodes_in_group("enemies")
 	if player and enemies.size() > 0:
-		player.target = enemies[0]
 		player._try_use_skill()
 		print("TEST-FIREBALL: cast at ", enemies[0].name)
 

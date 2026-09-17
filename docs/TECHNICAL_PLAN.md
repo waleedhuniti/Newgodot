@@ -118,13 +118,22 @@ to happen again when assets are added/changed; the resulting `.import/` cache
   dungeon pack's `coin.gltf.glb`/`key.gltf.glb` models. `Player.gd` owns an
   `Inventory` (`inventory.try_add_item(ItemStack.new(item_type, amount))`
   via `add_item()`).
-- `scenes/HUD.tscn`/`scripts/HUD.gd` — a `CanvasLayer` label reading
-  `inventory.count_all_items()` off the `Inventory`'s `item_stack_*` signals
-  and rendering *every* item type present generically (`"<Name> x<count>"`,
-  comma-separated) rather than hardcoding specific items - this is the
-  player's whole "inventory screen" for now, no separate menu. Also a
-  `ProgressBar` reading the player's `health_changed` signal, and a "Click to
-  play"/controls overlay (see §6).
+- `scenes/HUD.tscn`/`scripts/HUD.gd` — a `CanvasLayer` with:
+  - A centered `InventoryPanel`, toggled by `I`, reading
+    `inventory.count_all_items()` off the `Inventory`'s `item_stack_*`
+    signals and rendering *every* item type present generically
+    (`"<Name> x<count>"`) rather than hardcoding specific items - this is
+    the player's whole "inventory screen" for now, no grid/drag-and-drop.
+  - A red `HealthBar` and a blue `ManaBar` (both `ProgressBar` with
+    `custom_styles/fg`/`bg` `StyleBoxFlat`s), reading the player's
+    `health_changed`/`mana_changed` signals.
+  - The "Click to play"/controls overlay (see §6).
+- `scripts/EnemyHealthBar.gd`/`scenes/EnemyHealthBar.tscn` — a small red bar
+  floating above each `Enemy`'s head, parented directly under it (so it's
+  freed automatically when the enemy is). Same screen-projection technique
+  as `DamageNumber.gd` (`Camera.unproject_position()` every frame, hidden via
+  `Camera.is_position_behind()` when off-screen), since Godot 3.x has no
+  billboard/3D UI node for this.
 - `scenes/Chest.tscn`/`scripts/Chest.gd` — an `Area`-based interactable
   (`chest_gold.glb`, which conveniently ships its lid as a separate child
   mesh with its origin already at the hinge, so opening it is just rotating
@@ -135,7 +144,11 @@ to happen again when assets are added/changed; the resulting `.import/` cache
 - `scripts/Fireball.gd`/`scenes/Fireball.tscn`/`scenes/FireballBurst.tscn` -
   the player's skill (key `1`) now casts a homing fireball projectile instead
   of dealing instant melee damage; see §7 for where this came from and what
-  changed porting it.
+  changed porting it. Gated by mana as well as its cooldown (`Player.gd`:
+  `mana`/`max_mana`/`mana_regen_rate`, regenerating over time, spent per cast,
+  `mana_changed` signal) so it can't be spammed once fights get longer than
+  one cooldown window. Also auto-acquires the nearest enemy in range if
+  nothing's targeted yet - see §7's note on why that fix mattered.
 - `scenes/DamageNumber.tscn`/`scripts/DamageNumber.gd` — a floating "-N" that
   rises and fades over ~0.8s wherever a character takes damage
   (`AnimatedCharacter.gd`'s `take_damage()` spawns one for both Player and
@@ -317,11 +330,20 @@ so this was a hand port, not a drop-in.
   fireball's 14. Fixed by re-running `look_at()` every physics frame (a
   homing missile) rather than once at spawn - also just better feel for a
   click-to-target combat system where the player isn't manually leading shots.
-- **Headless verification**: `--test-fireball` (`Main.gd`) sets the player's
-  target to the nearest enemy and calls `_try_use_skill()` directly, logging
-  HP the same way `--test-combat` does. Confirmed via a debug-cam screenshot
-  that the fireball renders and travels correctly, and via the HP log that it
-  now actually connects for its full 14 damage.
+- **Headless verification**: `--test-fireball` (`Main.gd`) calls
+  `_try_use_skill()` directly, logging HP the same way `--test-combat` does.
+  Confirmed via a debug-cam screenshot that the fireball renders and travels
+  correctly, and via the HP log that it now actually connects for its full
+  14 damage.
+- **A real UX bug found by an actual user, not headlessly**: pressing `1`
+  did nothing at all if the player hadn't first clicked an enemy to target
+  it - `_try_use_skill()` required `target != null` with no fallback and no
+  feedback, so it silently no-op'd. Fixed by having it auto-acquire the
+  nearest enemy in `skill_range` when nothing's targeted (`Player.gd`'s
+  `_find_nearest_enemy_in_range()`). `--test-fireball` was updated to no
+  longer pre-set `player.target` before calling `_try_use_skill()`, so it
+  actually exercises this fallback instead of masking the bug the same way
+  the original manual test had.
 
 ## 8. Known gaps / next steps
 
