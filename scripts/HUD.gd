@@ -4,8 +4,6 @@ onready var label = $Label
 onready var tutorial = $Tutorial
 onready var health_bar = $HealthBar
 
-var coin_type = preload("res://resources/item_types/ItemType_Coin.tres")
-var key_type = preload("res://resources/item_types/ItemType_Key.tres")
 var player_inventory = null
 
 func _ready():
@@ -23,7 +21,13 @@ func _ready():
 
 func _on_inventory_changed(_a = null, _b = null):
 	var counts = player_inventory.count_all_items()
-	label.text = "Coins: %d   Keys: %d" % [counts.get(coin_type, 0), counts.get(key_type, 0)]
+	if counts.size() == 0:
+		label.text = "Inventory: empty"
+		return
+	var text = "Inventory: "
+	for item_type in counts:
+		text += "%s x%d   " % [item_type.name, counts[item_type]]
+	label.text = text
 
 func _on_health_changed(current, max_hp):
 	health_bar.max_value = max_hp

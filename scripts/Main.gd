@@ -20,7 +20,10 @@ var _screenshot_frame = 20
 var _frame = 0
 var _test_combat = false
 var _test_pickup = false
+var _test_fireball = false
+var _test_chest = false
 var _pickup_queue = []
+var _chest_key_type = preload("res://resources/item_types/ItemType_Key.tres")
 
 func _ready():
 	for arg in OS.get_cmdline_args():
@@ -30,12 +33,24 @@ func _ready():
 			_screenshot_frame = int(arg.substr(len("--frames=")))
 	_test_combat = "--test-combat" in OS.get_cmdline_args()
 	_test_pickup = "--test-pickup" in OS.get_cmdline_args()
+	_test_fireball = "--test-fireball" in OS.get_cmdline_args()
+	_test_chest = "--test-chest" in OS.get_cmdline_args()
 	if _screenshot_path != "" and "--debug-cam" in OS.get_cmdline_args():
 		$DebugCamera.current = true
 	if _test_combat:
 		call_deferred("_setup_test_combat")
 	if _test_pickup:
 		call_deferred("_setup_test_pickup")
+	if _test_fireball:
+		call_deferred("_setup_test_fireball")
+
+func _setup_test_fireball():
+	var player = get_node_or_null("Player")
+	var enemies = get_tree().get_nodes_in_group("enemies")
+	if player and enemies.size() > 0:
+		player.target = enemies[0]
+		player._try_use_skill()
+		print("TEST-FIREBALL: cast at ", enemies[0].name)
 
 func _setup_test_combat():
 	var player = get_node_or_null("Player")
@@ -73,6 +88,25 @@ func _run_test_pickup_step():
 			readable[item_type.name] = counts[item_type]
 		print("TEST-PICKUP: final inventory = ", readable)
 
+func _run_test_chest_step():
+	var player = get_node_or_null("Player")
+	var chest = get_node_or_null("Chest")
+	if player == null or chest == null:
+		return
+	if _frame == 15:
+		player.add_item(_chest_key_type, 1)
+		player.transform.origin = chest.global_transform.origin + Vector3(2, 0, 0)
+		print("TEST-CHEST: moved player to chest with 1 key")
+	elif _frame == 30:
+		chest._try_open()
+		print("TEST-CHEST: tried to open")
+	elif _frame == 45:
+		var counts = player.inventory.count_all_items()
+		var readable = {}
+		for item_type in counts:
+			readable[item_type.name] = counts[item_type]
+		print("TEST-CHEST: final inventory = ", readable)
+
 func _debug_dump():
 	var player = get_node_or_null("Player")
 	if player:
@@ -81,18 +115,21 @@ func _debug_dump():
 		print("DEBUG anim_player: ", player.anim_player, " animations: ", (player.anim_player.get_animation_list() if player.anim_player else []))
 
 func _process(_delta):
-	if _test_combat:
+	if _test_combat or _test_fireball:
 		_frame += 1
-		if _frame % 30 == 0:
+		if _frame % 15 == 0:
 			_log_combat_status()
 	elif _test_pickup:
 		_frame += 1
 		if _frame % 15 == 0:
 			_run_test_pickup_step()
+	elif _test_chest:
+		_frame += 1
+		_run_test_chest_step()
 
 	if _screenshot_path == "":
 		return
-	if not _test_combat and not _test_pickup:
+	if not _test_combat and not _test_pickup and not _test_fireball and not _test_chest:
 		_frame += 1
 	if _frame == _screenshot_frame:
 		if "--verbose" in OS.get_cmdline_args():

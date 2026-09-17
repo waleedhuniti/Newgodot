@@ -76,12 +76,12 @@ to happen again when assets are added/changed; the resulting `.import/` cache
   Mouse-look camera (captured by default, Esc toggles), WASD relative to camera
   yaw, Shift to run, Space to jump, gravity, and animation state driven by a
   `KayKit` character's baked-in `AnimationPlayer` (`Idle_Rig`/`Walking_A_Rig`/
-  `Running_A_Rig` - `Skeleton_Warrior.glb` is a placeholder player model, see §7).
+  `Running_A_Rig` - `Skeleton_Warrior.glb` is a placeholder player model, see §8).
 - Environment: `assets/environments/dungeon_01/dungeon_01.glb`, the same
   KayKit-built dungeon hall from the t5c era (copied over, not rebuilt - see
   `art/environments/shards/dungeon_01/build.py` if it needs regenerating).
   Collision is currently a single flat `StaticBody`/`BoxShape` floor sized to
-  match the hall, not real per-wall collision (see §7).
+  match the hall, not real per-wall collision (see §8).
 - `scripts/AnimatedCharacter.gd` — shared `KinematicBody` base for
   Player/Enemy: finds the `AnimationPlayer` buried inside a KayKit model,
   `play_anim()` (no-ops if already playing unless forced), `health`/
@@ -119,9 +119,23 @@ to happen again when assets are added/changed; the resulting `.import/` cache
   `Inventory` (`inventory.try_add_item(ItemStack.new(item_type, amount))`
   via `add_item()`).
 - `scenes/HUD.tscn`/`scripts/HUD.gd` — a `CanvasLayer` label reading
-  `inventory.count_all_items()` off the `Inventory`'s `item_stack_*` signals,
-  showing coin/key counts, plus a `ProgressBar` reading the player's
-  `health_changed` signal, and a "Click to play"/controls overlay (see §6).
+  `inventory.count_all_items()` off the `Inventory`'s `item_stack_*` signals
+  and rendering *every* item type present generically (`"<Name> x<count>"`,
+  comma-separated) rather than hardcoding specific items - this is the
+  player's whole "inventory screen" for now, no separate menu. Also a
+  `ProgressBar` reading the player's `health_changed` signal, and a "Click to
+  play"/controls overlay (see §6).
+- `scenes/Chest.tscn`/`scripts/Chest.gd` — an `Area`-based interactable
+  (`chest_gold.glb`, which conveniently ships its lid as a separate child
+  mesh with its origin already at the hinge, so opening it is just rotating
+  that one node). Walk into range, press `E`: if the player's inventory has
+  the required item type (a key), `Inventory.consume_items({type: 1})` spends
+  one and the chest grants a reward item (a sword) via the player's
+  `add_item()`. One placed in `Main.tscn`.
+- `scripts/Fireball.gd`/`scenes/Fireball.tscn`/`scenes/FireballBurst.tscn` -
+  the player's skill (key `1`) now casts a homing fireball projectile instead
+  of dealing instant melee damage; see §7 for where this came from and what
+  changed porting it.
 - `scenes/DamageNumber.tscn`/`scripts/DamageNumber.gd` — a floating "-N" that
   rises and fades over ~0.8s wherever a character takes damage
   (`AnimatedCharacter.gd`'s `take_damage()` spawns one for both Player and
@@ -250,8 +264,66 @@ else assumed blocked; not every "official Godot" URL behaves the same.
   Pointer Lock spec only requires an actual click, which a real user
   provides, so the fix should work in practice; still needs a real human
   click to fully confirm.
+- **The tutorial overlay itself ate the click meant to dismiss it**: found by
+  an actual user, not headlessly - a real click still didn't dismiss the
+  overlay or capture the mouse. Root cause: `Control`-derived nodes default
+  to `mouse_filter = 0` (Stop), which absorbs a click before it ever reaches
+  `_unhandled_input` - so every click landed on the full-screen overlay and
+  never reached `Player.gd`'s capture-on-click handler. Fixed by setting
+  `mouse_filter = 2` (Ignore) on the overlay's `Control`, `ColorRect`, and
+  `Label`. Confirmed via a headless-Chromium click test that the overlay
+  actually disappears afterward now.
 
-## 7. Known gaps / next steps
+## 7. Porting the fireball VFX from Godot 4
+
+The player's skill (key `1`) casts a fireball, using a small Godot 4 VFX
+asset provided to this project (two overlapping noise-shaded spheres for a
+molten-core look, plus particle trails) as the starting point. Godot 4 assets
+don't load in this Godot 3.5 project (see §2/§6 for why we're on 3.5 at all),
+so this was a hand port, not a drop-in.
+
+- **What ported directly**: the `.gdshader` files almost verbatim - Godot
+  3.x and 4.x's spatial shading language is close to identical for basic
+  vertex/fragment work (`VERTEX`, `NORMAL`, `UV`, `TIME`, `ALBEDO`, `ALPHA`
+  all match). Two mechanical renames needed: `hint_color` instead of Godot
+  4's `source_color` uniform hint, and `depth_draw_alpha_prepass` instead of
+  4's `depth_prepass_alpha` render mode (the latter only surfaced as a
+  `SHADER ERROR: Invalid render mode` at runtime - worth remembering for any
+  future shader port, since it's an easy one to miss by inspection).
+- **What didn't port**: the two custom `.res` `ArrayMesh` files (a trail
+  strip and a particle billboard) are Godot 4's binary resource format and
+  won't load in 3.x - substituted plain `QuadMesh` primitives instead, which
+  the shaders don't care about (they just need *a* mesh to shade). The scene
+  files themselves (`Node3D`/`MeshInstance3D`/`GPUParticles3D`/`Transform3D`,
+  format 3) also don't load - hand-rewritten as Godot 3.x's
+  `Spatial`/`MeshInstance`/`Particles`/`Transform` (format 2), and
+  `NoiseTexture2D`+`FastNoiseLite` (Godot 4) became `NoiseTexture`+
+  `OpenSimplexNoise` (Godot 3.x's older but equivalent noise texture pair).
+- **`ParticlesMaterial` property names differ** from Godot 4's
+  `ParticleProcessMaterial`: no `_min`/`_max` suffix split - Godot 3.x just
+  has `initial_velocity`/`initial_velocity_random` and `scale`/`scale_random`
+  instead of `initial_velocity_min`/`initial_velocity_max` and
+  `scale_min`/`scale_max`. Verified the exact property names via
+  `ParticlesMaterial.new().get_property_list()` rather than guessing, given
+  how often small Godot-version property renames like this one have bitten
+  this project already.
+- **A real projectile bug, not a porting issue**: the fireball originally
+  oriented toward the target once at spawn (`look_at()` in `_ready()`) and
+  then flew a fixed straight line. Since the target (an `Enemy`) is usually
+  still walking, a fixed heading and a moving target reliably diverge before
+  ever meeting - the fireball just silently expired after its lifetime with
+  no hit ever registering, confirmed via `--test-fireball`'s per-frame HP log
+  showing only melee-auto-attack damage (multiples of 6), never the
+  fireball's 14. Fixed by re-running `look_at()` every physics frame (a
+  homing missile) rather than once at spawn - also just better feel for a
+  click-to-target combat system where the player isn't manually leading shots.
+- **Headless verification**: `--test-fireball` (`Main.gd`) sets the player's
+  target to the nearest enemy and calls `_try_use_skill()` directly, logging
+  HP the same way `--test-combat` does. Confirmed via a debug-cam screenshot
+  that the fireball renders and travels correctly, and via the HP log that it
+  now actually connects for its full 14 damage.
+
+## 8. Known gaps / next steps
 
 1. **Placeholder player model**: using `Skeleton_Warrior.glb` (from
    `art/creatures/kaykit-skeletons/`, meant for enemies) as a stand-in player
@@ -262,10 +334,15 @@ else assumed blocked; not every "official Godot" URL behaves the same.
    hand-authored collision shapes per piece, or Godot's mesh-to-trimesh-collision
    import option (needs the editor's per-file import settings, not something
    hand-authored `.tscn` text easily expresses).
-3. **No quests/creature-taming yet** - combat, a first enemy, and basic item
-   pickup are done (§4), but nothing past that.
-4. **Inventory has no UI beyond a HUD counter**: no inventory screen, no
-   item use/equip, no distinct item types beyond coin/key - just counts.
+3. **No quests/creature-taming yet** - combat, a first enemy, basic item
+   pickup, and one chest/reward interaction are done (§4), but nothing past
+   that.
+4. **Inventory has a HUD readout, not a screen**: shows every item and count
+   live, but there's no menu, no item use/equip beyond the one chest
+   interaction, no drag-and-drop.
 5. **Only one enemy type, one drop**: `Skeleton_Minion` is the only mob and
    it always drops exactly one coin - no drop table/chance/variety yet.
-6. **No multiplayer** - out of scope for now (§1).
+   Likewise only one chest, always the same key/sword pairing.
+6. **The sword reward doesn't do anything yet**: picking it up just adds it
+   to the inventory count - no equip system, no stat change.
+7. **No multiplayer** - out of scope for now (§1).

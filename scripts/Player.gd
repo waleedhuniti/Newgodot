@@ -10,9 +10,11 @@ export var mouse_sensitivity = 0.0035
 export var attack_range = 2.2
 export var attack_damage = 6.0
 export var attack_cooldown = 1.2
-export var skill_range = 2.6
+export var skill_range = 20.0
 export var skill_damage = 14.0
 export var skill_cooldown = 4.0
+
+var fireball_scene = preload("res://scenes/Fireball.tscn")
 
 var velocity = Vector3.ZERO
 var camera_pivot_yaw = 0.0
@@ -83,10 +85,21 @@ func _try_use_skill():
 	if dist > skill_range:
 		return
 	_face_target()
-	play_anim("2H_Melee_Attack_Spin", true)
+	play_anim("Spellcast_Shoot", true)
 	_busy_until = _time_now() + 0.6
 	_skill_timer = skill_cooldown
-	target.take_damage(skill_damage)
+	_cast_fireball()
+
+func _cast_fireball():
+	var fireball = fireball_scene.instance()
+	# Set before add_child(): Fireball's _ready() reads `target` immediately
+	# to orient itself, and onready-free properties like `translation` are
+	# safe to set on an unparented node - setting them after add_child would
+	# be too late, the same ordering bug hit with DamageNumber earlier.
+	fireball.target = target
+	fireball.damage = skill_damage
+	fireball.translation = global_transform.origin + Vector3(0, 1.2, 0) - transform.basis.z.normalized() * 0.5
+	get_tree().root.add_child(fireball)
 
 func _time_now():
 	return OS.get_ticks_msec() / 1000.0

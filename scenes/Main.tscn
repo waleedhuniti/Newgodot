@@ -7,6 +7,7 @@
 [ext_resource path="res://scenes/HUD.tscn" type="PackedScene" id=5]
 [ext_resource path="res://scenes/CoinPickup.tscn" type="PackedScene" id=6]
 [ext_resource path="res://scenes/KeyPickup.tscn" type="PackedScene" id=7]
+[ext_resource path="res://scenes/Chest.tscn" type="PackedScene" id=8]
 
 [sub_resource type="BoxShape" id=1]
 extents = Vector3( 12, 0.1, 8 )
@@ -48,3 +49,6 @@ transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0.1, -8 )
 
 [node name="KeyPickup" parent="." instance=ExtResource( 7 )]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0.1, -8 )
+
+[node name="Chest" parent="." instance=ExtResource( 8 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0.1, -8 )
