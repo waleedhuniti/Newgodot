@@ -37,7 +37,11 @@ func _ready():
 	# it stays empty and every try_add_item() silently fails. Assigning here
 	# forces the setter to actually run.
 	inventory.width = 20
-	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	# Don't capture the mouse here: browsers refuse a Pointer Lock request that
+	# isn't triggered by an actual user gesture (click/keypress), so this
+	# would silently fail in the HTML5 export while working fine in a native
+	# build - the exact reason camera look didn't respond after loading the
+	# web build. Captured on the first click instead, in _unhandled_input().
 	play_anim("Idle")
 
 func add_item(item_type, item_amount = 1):
@@ -51,7 +55,10 @@ func _unhandled_input(event):
 		var mode = Input.get_mouse_mode()
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE if mode == Input.MOUSE_MODE_CAPTURED else Input.MOUSE_MODE_CAPTURED)
 	if event is InputEventMouseButton and event.pressed and event.button_index == BUTTON_LEFT:
-		_try_select_target()
+		if Input.get_mouse_mode() != Input.MOUSE_MODE_CAPTURED:
+			Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+		else:
+			_try_select_target()
 	if event is InputEventKey and event.pressed and event.scancode == KEY_1:
 		_try_use_skill()
 

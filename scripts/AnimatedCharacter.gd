@@ -9,6 +9,8 @@ extends KinematicBody
 export var max_health = 30.0
 export var death_anim = "Death_A"
 
+var damage_number_scene = preload("res://scenes/DamageNumber.tscn")
+
 var health = max_health
 var is_dead = false
 var current_anim = ""
@@ -44,10 +46,17 @@ func take_damage(amount):
 		return
 	health = max(0.0, health - amount)
 	emit_signal("health_changed", health, max_health)
+	_spawn_damage_number(amount)
 	if health <= 0:
 		die()
 	else:
 		play_anim("Hit_A", true)
+
+func _spawn_damage_number(amount):
+	var dmg = damage_number_scene.instance()
+	dmg.world_position = global_transform.origin + Vector3(0, 1.6, 0)
+	get_tree().root.add_child(dmg)
+	dmg.set_amount(amount)
 
 func die():
 	if is_dead:

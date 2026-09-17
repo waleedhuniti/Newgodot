@@ -120,7 +120,14 @@ to happen again when assets are added/changed; the resulting `.import/` cache
   via `add_item()`).
 - `scenes/HUD.tscn`/`scripts/HUD.gd` — a `CanvasLayer` label reading
   `inventory.count_all_items()` off the `Inventory`'s `item_stack_*` signals,
-  showing coin/key counts.
+  showing coin/key counts, plus a `ProgressBar` reading the player's
+  `health_changed` signal, and a "Click to play"/controls overlay (see §6).
+- `scenes/DamageNumber.tscn`/`scripts/DamageNumber.gd` — a floating "-N" that
+  rises and fades over ~0.8s wherever a character takes damage
+  (`AnimatedCharacter.gd`'s `take_damage()` spawns one for both Player and
+  Enemy). Godot 3.x has no Label3D/billboard text, so it's a 2D `Label` on
+  its own `CanvasLayer` whose screen position is recomputed from a stored 3D
+  world point via `Camera.unproject_position()` every frame instead.
 - Loot: `Enemy.gd`'s `die()` spawns a `CoinPickup` at its death position
   (`loot_scene`, currently always a coin - no drop table yet).
 - Headless pickup verification: `--test-pickup` teleports the player onto
@@ -223,6 +230,26 @@ else assumed blocked; not every "official Godot" URL behaves the same.
   `build/` scratch dir), verify it, then copy `build/web/*` into `docs/` and
   commit. GitHub Pages serves whatever's on `docs/` on this branch directly -
   no build step runs on GitHub's side.
+- **Browsers block silent Pointer Lock**: `Player.gd` originally called
+  `Input.set_mouse_mode(MOUSE_MODE_CAPTURED)` in `_ready()`, which works fine
+  in the native build but does nothing in a browser - Pointer Lock requires an
+  actual user gesture (click/keypress), not a request fired from page-load
+  code, so camera look silently never engaged. Fixed by moving the capture
+  call into the first left-click's `_unhandled_input` handler instead, and
+  added a "Click to play" overlay (`HUD.tscn`'s `Tutorial` node, toggled by
+  `Input.get_mouse_mode()`) so it's obvious why nothing responds until then.
+  Caught by the user actually trying to play the hosted build - a headless
+  screenshot alone wouldn't show this, since it never simulates a click.
+  Confirmed the original bug is gone (page-load no longer errors requesting
+  Pointer Lock), but **could not fully verify the fix's happy path**
+  headlessly: Chromium's automation layer (Playwright/CDP) doesn't treat a
+  synthetic `page.mouse.click()` as a "trusted" user gesture for this
+  specific API, so `document.pointerLockElement` stays `none` even after
+  clicking in the test harness - a known limitation of browser automation for
+  Pointer-Lock/Fullscreen-style APIs, not something specific to Godot. The
+  Pointer Lock spec only requires an actual click, which a real user
+  provides, so the fix should work in practice; still needs a real human
+  click to fully confirm.
 
 ## 7. Known gaps / next steps
 
